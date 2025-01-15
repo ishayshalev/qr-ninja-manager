@@ -2,7 +2,7 @@ import { QRCode } from "@/pages/Index";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BarChart2, Download, Link } from "lucide-react";
-import QRCodeReact from "qrcode.react";
+import { QRCodeCanvas } from "qrcode.react";
 import { useToast } from "@/hooks/use-toast";
 
 interface QRCodeListProps {
@@ -51,7 +51,7 @@ export const QRCodeList = ({ qrCodes, setQRCodes }: QRCodeListProps) => {
           </CardHeader>
           <CardContent>
             <div className="flex justify-center mb-4">
-              <QRCodeReact
+              <QRCodeCanvas
                 id={qr.id}
                 value={qr.redirectUrl}
                 size={200}
