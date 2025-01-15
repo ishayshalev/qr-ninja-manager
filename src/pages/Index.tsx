@@ -22,6 +22,9 @@ const Index = () => {
   const { data: qrCodes = [], isLoading } = useQuery({
     queryKey: ["qrCodes"],
     queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.user.id) throw new Error("No user found");
+
       const { data, error } = await supabase
         .from("qr_codes")
         .select("*")
@@ -39,12 +42,21 @@ const Index = () => {
 
   const createQRMutation = useMutation({
     mutationFn: async (newQR: { name: string; redirectUrl: string }) => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.user.id) throw new Error("No user found");
+
+      // Normalize URL by adding https:// if not present
+      const normalizedUrl = newQR.redirectUrl.startsWith('http://') || newQR.redirectUrl.startsWith('https://')
+        ? newQR.redirectUrl
+        : `https://${newQR.redirectUrl}`;
+
       const { data, error } = await supabase
         .from("qr_codes")
         .insert([
           {
             name: newQR.name,
-            redirect_url: newQR.redirectUrl
+            redirect_url: normalizedUrl,
+            user_id: session.session.user.id
           }
         ])
         .select()
@@ -90,7 +102,11 @@ const Index = () => {
 
       <QRCodeList
         qrCodes={qrCodes}
-        setQRCodes={(qrs) => queryClient.setQueryData(["qrCodes"], qrs)}
+        setQRCodes={(qrs) => {
+          if (Array.isArray(qrs)) {
+            queryClient.setQueryData(["qrCodes"], qrs);
+          }
+        }}
       />
 
       <CreateQRDialog
