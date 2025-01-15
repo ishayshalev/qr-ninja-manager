@@ -10,6 +10,22 @@ interface CreateQRDialogProps {
   onCreateQR: (name: string, redirectUrl: string) => void;
 }
 
+const normalizeUrl = (url: string) => {
+  if (!url) return url;
+  
+  // Add https:// if no protocol is specified
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'https://' + url;
+  }
+  
+  try {
+    const urlObj = new URL(url);
+    return urlObj.toString();
+  } catch (e) {
+    return url;
+  }
+};
+
 export const CreateQRDialog = ({
   open,
   onOpenChange,
@@ -20,7 +36,8 @@ export const CreateQRDialog = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onCreateQR(name, redirectUrl);
+    const normalizedUrl = normalizeUrl(redirectUrl);
+    onCreateQR(name, normalizedUrl);
     setName("");
     setRedirectUrl("");
     onOpenChange(false);
@@ -44,13 +61,12 @@ export const CreateQRDialog = ({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="redirectUrl">Redirect URL</Label>
+            <Label htmlFor="redirectUrl">Website URL</Label>
             <Input
               id="redirectUrl"
               value={redirectUrl}
               onChange={(e) => setRedirectUrl(e.target.value)}
-              placeholder="https://example.com"
-              type="url"
+              placeholder="website.com"
               required
             />
           </div>
