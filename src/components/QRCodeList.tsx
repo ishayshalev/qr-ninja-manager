@@ -43,47 +43,50 @@ export const QRCodeList = ({ qrCodes, setQRCodes }: QRCodeListProps) => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {qrCodes.map((qr) => (
-        <Card key={qr.id} className="overflow-hidden">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-semibold">{qr.name}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-center mb-4">
-              <QRCodeCanvas
-                id={qr.id}
-                value={qr.redirectUrl}
-                size={200}
-                level="H"
-                includeMargin
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center text-sm text-gray-600">
-                <Link className="h-4 w-4 mr-2" />
-                <span className="truncate">{qr.redirectUrl}</span>
+    <div>
+      <h2 className="text-xl font-semibold mb-4">QR Codes</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {qrCodes.map((qr) => (
+          <Card key={qr.id} className="overflow-hidden">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold">{qr.name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-center mb-4">
+                <QRCodeCanvas
+                  id={qr.id}
+                  value={qr.redirectUrl}
+                  size={200}
+                  level="H"
+                  includeMargin
+                />
               </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <BarChart2 className="h-4 w-4 mr-2" />
-                <span>{qr.usageCount} scans</span>
+              
+              <div className="space-y-2">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Link className="h-4 w-4 mr-2" />
+                  <span className="truncate">{qr.redirectUrl}</span>
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <BarChart2 className="h-4 w-4 mr-2" />
+                  <span>{qr.usageCount} scans</span>
+                </div>
               </div>
-            </div>
 
-            <div className="mt-4 flex justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => downloadQRCode(qr.id, qr.name)}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download PNG
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+              <div className="mt-4 flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => downloadQRCode(qr.id, qr.name)}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PNG
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

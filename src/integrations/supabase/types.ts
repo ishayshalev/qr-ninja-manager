@@ -27,11 +27,44 @@ export type Database = {
         }
         Relationships: []
       }
+      projects: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       qr_codes: {
         Row: {
           created_at: string | null
           id: string
           name: string
+          project_id: string | null
           redirect_url: string
           usage_count: number | null
           user_id: string
@@ -40,6 +73,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           name: string
+          project_id?: string | null
           redirect_url: string
           usage_count?: number | null
           user_id: string
@@ -48,11 +82,19 @@ export type Database = {
           created_at?: string | null
           id?: string
           name?: string
+          project_id?: string | null
           redirect_url?: string
           usage_count?: number | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "qr_codes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "qr_codes_user_id_fkey"
             columns: ["user_id"]
@@ -67,7 +109,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_project_total_scans: {
+        Args: {
+          project_id: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
