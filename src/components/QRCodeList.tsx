@@ -34,7 +34,10 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
         .update({ project_id: projectId })
         .eq("id", qrId);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Update project error:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["qrCodes"] });
@@ -44,7 +47,8 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
         description: "QR code folder updated successfully.",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Update project mutation error:", error);
       toast({
         title: "Error",
         description: "Failed to update QR code folder.",
@@ -58,16 +62,22 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user.id) throw new Error("No user found");
 
-      const { error } = await supabase
+      console.log("Creating folder with user ID:", session.session.user.id);
+      const { data, error } = await supabase
         .from("projects")
         .insert([
           {
             name: newFolderName,
             user_id: session.session.user.id
           }
-        ]);
+        ])
+        .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Create folder error:", error);
+        throw error;
+      }
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
@@ -78,7 +88,8 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
         description: "Folder created successfully.",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Create folder mutation error:", error);
       toast({
         title: "Error",
         description: "Failed to create folder.",
@@ -92,7 +103,8 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user.id) throw new Error("No user found");
 
-      const { error } = await supabase
+      console.log("Creating QR code with user ID:", session.session.user.id);
+      const { data, error } = await supabase
         .from("qr_codes")
         .insert([
           {
@@ -101,9 +113,14 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
             project_id: folderId,
             user_id: session.session.user.id
           }
-        ]);
+        ])
+        .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Create QR code error:", error);
+        throw error;
+      }
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["qrCodes"] });
@@ -113,7 +130,8 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
         description: "QR code created successfully.",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Create QR code mutation error:", error);
       toast({
         title: "Error",
         description: "Failed to create QR code.",
