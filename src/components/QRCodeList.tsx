@@ -1,17 +1,13 @@
 import { QRCode, TimeRange } from "@/types/qr";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
-import { TimeRangeSelector } from "./TimeRangeSelector";
 import { CreateQRDialog } from "./CreateQRDialog";
-import { QRCard } from "./QRCard";
-import { QRExportOptions } from "./QRExportOptions";
+import { TabsHeader } from "./qr/TabsHeader";
+import { ActionBar } from "./qr/ActionBar";
+import { QRCodeGrid } from "./qr/QRCodeGrid";
 
 interface QRCodeListProps {
   qrCodes: QRCode[];
@@ -157,83 +153,32 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
         folders={projects}
       />
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="mb-4 flex items-center justify-center gap-2 p-2">
-          <TabsTrigger value="all">
-            All QR Codes ({qrCodes.length})
-          </TabsTrigger>
-          <TabsTrigger value="no-folder">
-            No Folder ({qrCodes.filter(qr => !qr.projectId).length})
-          </TabsTrigger>
-          {projects.map((project) => (
-            <TabsTrigger key={project.id} value={project.id}>
-              {project.name} ({qrCodes.filter(qr => qr.projectId === project.id).length})
-            </TabsTrigger>
-          ))}
-          <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
-            <DialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="ml-2">
-                <Plus className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Folder</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Name</label>
-                  <Input
-                    value={newFolderName}
-                    onChange={(e) => setNewFolderName(e.target.value)}
-                    placeholder="Folder name"
-                  />
-                </div>
-                <Button onClick={() => createFolderMutation.mutate()}>Create Folder</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </TabsList>
+        <TabsHeader
+          qrCodes={qrCodes}
+          projects={projects}
+          isCreateFolderOpen={isCreateFolderOpen}
+          setIsCreateFolderOpen={setIsCreateFolderOpen}
+          newFolderName={newFolderName}
+          setNewFolderName={setNewFolderName}
+          onCreateFolder={() => createFolderMutation.mutate()}
+        />
 
         {["all", "no-folder", ...projects.map(p => p.id)].map((tabValue) => (
           <TabsContent key={tabValue} value={tabValue}>
-            <div className="mb-6 flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <div className="text-sm text-gray-600">
-                  Total Scans: {tabValue === "all" 
-                    ? qrCodes.reduce((acc, qr) => acc + (qr.usageCount || 0), 0)
-                    : tabValue === "no-folder"
-                      ? qrCodes.filter(qr => !qr.projectId).reduce((acc, qr) => acc + (qr.usageCount || 0), 0)
-                      : qrCodes.filter(qr => qr.projectId === tabValue).reduce((acc, qr) => acc + (qr.usageCount || 0), 0)
-                  }
-                </div>
-                <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
-              </div>
-              <div className="flex gap-4">
-                <Button variant="default" onClick={() => setIsCreateQROpen(true)}>
-                  Create QR Code
-                </Button>
-                <QRExportOptions 
-                  qrCodes={qrCodes}
-                  projects={projects}
-                  currentProjectId={tabValue === "all" ? null : tabValue === "no-folder" ? null : tabValue}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(tabValue === "all" 
-                ? qrCodes
-                : tabValue === "no-folder"
-                  ? qrCodes.filter(qr => !qr.projectId)
-                  : qrCodes.filter(qr => qr.projectId === tabValue)
-              ).map((qr) => (
-                <QRCard
-                  key={qr.id}
-                  qr={qr}
-                  projects={projects}
-                  onProjectChange={handleProjectChange}
-                />
-              ))}
-            </div>
+            <ActionBar
+              qrCodes={qrCodes}
+              projects={projects}
+              timeRange={timeRange}
+              setTimeRange={setTimeRange}
+              setIsCreateQROpen={setIsCreateQROpen}
+              currentTabValue={tabValue}
+            />
+            <QRCodeGrid
+              qrCodes={qrCodes}
+              projects={projects}
+              currentTabValue={tabValue}
+              onProjectChange={handleProjectChange}
+            />
           </TabsContent>
         ))}
       </Tabs>
