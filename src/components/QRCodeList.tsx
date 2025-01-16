@@ -119,14 +119,14 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
                   <span>{qr.usageCount} scans</span>
                 </div>
                 <Select
-                  value={qr.projectId || ""}
-                  onValueChange={(value) => handleProjectChange(qr.id, value || null)}
+                  value={qr.projectId || "none"}
+                  onValueChange={(value) => handleProjectChange(qr.id, value === "none" ? null : value)}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a project" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Project</SelectItem>
+                    <SelectItem value="none">No Project</SelectItem>
                     {projects.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
                         {project.name}
