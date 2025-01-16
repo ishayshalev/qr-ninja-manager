@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Auth = () => {
@@ -39,7 +38,8 @@ const Auth = () => {
                 },
               },
             }}
-            providers={[]}
+            providers={["google"]}
+            redirectTo={`${window.location.origin}/auth/callback`}
           />
         </CardContent>
       </Card>
