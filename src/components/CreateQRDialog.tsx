@@ -3,21 +3,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CreateQRDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateQR: (name: string, redirectUrl: string) => void;
+  onCreateQR: (name: string, redirectUrl: string, folderId: string | null) => void;
+  folders: { id: string; name: string }[];
 }
 
 const normalizeUrl = (url: string) => {
   if (!url) return url;
-  
-  // Add https:// if no protocol is specified
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
     url = 'https://' + url;
   }
-  
   try {
     const urlObj = new URL(url);
     return urlObj.toString();
@@ -30,16 +29,19 @@ export const CreateQRDialog = ({
   open,
   onOpenChange,
   onCreateQR,
+  folders,
 }: CreateQRDialogProps) => {
   const [name, setName] = useState("");
   const [redirectUrl, setRedirectUrl] = useState("");
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const normalizedUrl = normalizeUrl(redirectUrl);
-    onCreateQR(name, normalizedUrl);
+    onCreateQR(name, normalizedUrl, selectedFolder);
     setName("");
     setRedirectUrl("");
+    setSelectedFolder(null);
     onOpenChange(false);
   };
 
@@ -69,6 +71,25 @@ export const CreateQRDialog = ({
               placeholder="website.com"
               required
             />
+          </div>
+          <div className="space-y-2">
+            <Label>Folder</Label>
+            <Select
+              value={selectedFolder || "none"}
+              onValueChange={(value) => setSelectedFolder(value === "none" ? null : value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a folder" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No Folder</SelectItem>
+                {folders.map((folder) => (
+                  <SelectItem key={folder.id} value={folder.id}>
+                    {folder.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex justify-end">
             <Button type="submit">Create QR Code</Button>

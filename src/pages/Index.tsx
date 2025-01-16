@@ -2,30 +2,12 @@ import { useState } from "react";
 import { QRCodeList } from "@/components/QRCodeList";
 import { useQuery, QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { Settings, LogOut, CreditCard } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-
-// Export the QRCode type interface
-export interface QRCode {
-  id: string;
-  name: string;
-  redirectUrl: string;
-  usageCount: number;
-  projectId: string | null;
-}
+import { Header } from "@/components/Header";
+import { QRCode } from "@/types/qr";
 
 const queryClient = new QueryClient();
 
 const Index = () => {
-  const navigate = useNavigate();
-
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
@@ -47,7 +29,6 @@ const Index = () => {
           return {
             id: project.id,
             name: project.name,
-            description: project.description,
             totalScans: totalScans || 0,
           };
         })
@@ -79,46 +60,13 @@ const Index = () => {
     }
   });
 
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (!error) {
-      navigate("/auth");
-    }
-  };
-
   if (isLoadingProjects || isLoadingQRCodes) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="border-b">
-        <div className="container mx-auto flex justify-between items-center py-4">
-          <h1 className="text-2xl font-bold">QR Code Manager</h1>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Settings className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate("/settings")}>
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard className="mr-2 h-4 w-4" />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
+      <Header />
       <div className="container mx-auto py-8">
         <QRCodeList
           qrCodes={qrCodes}
