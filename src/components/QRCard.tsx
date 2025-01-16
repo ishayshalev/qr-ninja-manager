@@ -1,10 +1,13 @@
 import { QRCode } from "@/types/qr";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Link } from "lucide-react";
+import { Download, Link, Trash2 } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface QRCardProps {
   qr: QRCode;
@@ -14,6 +17,37 @@ interface QRCardProps {
 
 export const QRCard = ({ qr, projects, onProjectChange }: QRCardProps) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const deleteQRMutation = useMutation({
+    mutationFn: async (qrId: string) => {
+      console.log("Deleting QR code:", qrId);
+      const { error } = await supabase
+        .from("qr_codes")
+        .delete()
+        .eq("id", qrId);
+      
+      if (error) {
+        console.error("Delete QR code error:", error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["qrCodes"] });
+      toast({
+        title: "QR Code Deleted",
+        description: "Your QR code has been deleted successfully.",
+      });
+    },
+    onError: (error) => {
+      console.error("Delete QR code mutation error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete QR code.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const downloadQRCode = (id: string, name: string) => {
     const canvas = document.getElementById(id) as HTMLCanvasElement;
@@ -77,7 +111,32 @@ export const QRCard = ({ qr, projects, onProjectChange }: QRCardProps) => {
           </div>
         </div>
 
-        <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex justify-end gap-2">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete the QR code.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={() => deleteQRMutation.mutate(qr.id)}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <Button
             variant="outline"
             size="sm"
