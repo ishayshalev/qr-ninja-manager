@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { TimeRange } from "@/types/qr";
+import { TimeRange, QRCode } from "@/types/qr";
 import { TimeRangeSelector } from "../TimeRangeSelector";
 import { QRExportOptions } from "../QRExportOptions";
 
 interface ActionBarProps {
-  qrCodes: Array<{ usageCount?: number; projectId: string | null }>;
+  qrCodes: QRCode[];
   projects: Array<{ id: string; name: string }>;
   timeRange: TimeRange;
   setTimeRange: (range: TimeRange) => void;
