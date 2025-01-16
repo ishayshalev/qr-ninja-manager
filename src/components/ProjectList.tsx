@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Folder, Plus, BarChart2 } from "lucide-react";
+import { Folder, Plus, BarChart2, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +25,9 @@ interface ProjectListProps {
 
 export const ProjectList = ({ projects, onCreateProject, onProjectSelect, selectedProjectId }: ProjectListProps) => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const [deleteQRCodes, setDeleteQRCodes] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDescription, setNewProjectDescription] = useState("");
   const { toast } = useToast();
@@ -56,6 +59,58 @@ export const ProjectList = ({ projects, onCreateProject, onProjectSelect, select
     },
   });
 
+  const deleteProjectMutation = useMutation({
+    mutationFn: async ({ projectId, deleteQRs }: { projectId: string; deleteQRs: boolean }) => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.user.id) throw new Error("No user found");
+
+      if (deleteQRs) {
+        // Delete all QR codes in the project
+        const { error: qrError } = await supabase
+          .from("qr_codes")
+          .delete()
+          .eq("project_id", projectId);
+        
+        if (qrError) throw qrError;
+      } else {
+        // Move QR codes to no folder
+        const { error: updateError } = await supabase
+          .from("qr_codes")
+          .update({ project_id: null })
+          .eq("project_id", projectId);
+        
+        if (updateError) throw updateError;
+      }
+
+      // Delete the project
+      const { error: projectError } = await supabase
+        .from("projects")
+        .delete()
+        .eq("id", projectId);
+      
+      if (projectError) throw projectError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["qrCodes"] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      setIsDeleteDialogOpen(false);
+      setProjectToDelete(null);
+      setDeleteQRCodes(false);
+      toast({
+        title: "Success",
+        description: "Project deleted successfully.",
+      });
+    },
+    onError: (error) => {
+      console.error("Delete project error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete project.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreateProject = () => {
     if (!newProjectName.trim()) {
       toast({
@@ -70,6 +125,20 @@ export const ProjectList = ({ projects, onCreateProject, onProjectSelect, select
     setNewProjectName("");
     setNewProjectDescription("");
     setIsCreateDialogOpen(false);
+  };
+
+  const handleDeleteProject = (projectId: string) => {
+    setProjectToDelete(projectId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteProject = () => {
+    if (projectToDelete) {
+      deleteProjectMutation.mutate({
+        projectId: projectToDelete,
+        deleteQRs: deleteQRCodes,
+      });
+    }
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -141,6 +210,39 @@ export const ProjectList = ({ projects, onCreateProject, onProjectSelect, select
 
   return (
     <div className="mb-8">
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Project</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this project? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="deleteQRCodes"
+                checked={deleteQRCodes}
+                onChange={(e) => setDeleteQRCodes(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              <label htmlFor="deleteQRCodes" className="text-sm text-gray-600">
+                Also delete all QR codes in this project
+              </label>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmDeleteProject}>
+                Delete Project
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Projects</h2>
         <div className="flex gap-2">
@@ -191,7 +293,19 @@ export const ProjectList = ({ projects, onCreateProject, onProjectSelect, select
             onDrop={(e) => handleDrop(e, project.id)}
           >
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">{project.name}</CardTitle>
+              <div className="flex justify-between items-start">
+                <CardTitle className="text-lg">{project.name}</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteProject(project.id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 text-gray-500 hover:text-red-500" />
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {project.description && (
