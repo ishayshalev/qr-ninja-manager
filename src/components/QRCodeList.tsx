@@ -13,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { TimeRangeSelector } from "./TimeRangeSelector";
 import { TimeRange } from "@/types/qr";
+import { CreateQRDialog } from "./CreateQRDialog";
+import JSZip from 'jszip';
 
 interface QRCodeListProps {
   qrCodes: QRCode[];
@@ -24,6 +26,7 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+  const [isCreateQROpen, setIsCreateQROpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [timeRange, setTimeRange] = useState<TimeRange>("all");
 
@@ -111,7 +114,32 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
     updateProjectMutation.mutate({ qrId, projectId });
   };
 
-  const exportQRCodes = (projectId: string | null) => {
+  const exportQRCodesAsZip = async (qrCodesToExport: QRCode[]) => {
+    const zip = new JSZip();
+    
+    for (const qr of qrCodesToExport) {
+      const canvas = document.getElementById(qr.id) as HTMLCanvasElement;
+      if (canvas) {
+        const pngData = canvas.toDataURL("image/png").split(',')[1];
+        zip.file(`${qr.name}-qr.png`, pngData, { base64: true });
+      }
+    }
+    
+    const blob = await zip.generateAsync({ type: "blob" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "qr-codes.zip";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "QR Codes Downloaded",
+      description: "Your QR codes have been downloaded as a ZIP file.",
+    });
+  };
+
+  const exportQRCodesAsCSV = (projectId: string | null) => {
     const qrCodesToExport = projectId 
       ? qrCodes.filter(qr => qr.projectId === projectId)
       : qrCodes;
@@ -129,6 +157,23 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    
+    toast({
+      title: "QR Codes Exported",
+      description: "Your QR codes have been exported as a CSV file.",
+    });
+  };
+
+  const handleExport = (projectId: string | null, type: 'csv' | 'zip') => {
+    const qrCodesToExport = projectId 
+      ? qrCodes.filter(qr => qr.projectId === projectId)
+      : qrCodes;
+
+    if (type === 'csv') {
+      exportQRCodesAsCSV(projectId);
+    } else {
+      exportQRCodesAsZip(qrCodesToExport);
+    }
   };
 
   const renderQRCodeCard = (qr: QRCode) => (
@@ -187,8 +232,19 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
     </Card>
   );
 
+  const handleCreateQR = (name: string, redirectUrl: string, folderId: string | null) => {
+    // Add your create QR code logic here
+    console.log('Creating QR code:', { name, redirectUrl, folderId });
+  };
+
   return (
     <div className="w-full">
+      <CreateQRDialog
+        open={isCreateQROpen}
+        onOpenChange={setIsCreateQROpen}
+        onCreateQR={handleCreateQR}
+        folders={projects}
+      />
       <Tabs defaultValue="all" className="w-full">
         <TabsList className="mb-4 flex justify-start flex-wrap">
           <TabsTrigger value="all">
@@ -242,12 +298,20 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
                 <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
               </div>
               <div className="flex gap-4">
-                <Button variant="default">
+                <Button variant="default" onClick={() => setIsCreateQROpen(true)}>
                   Create QR Code
                 </Button>
-                <Button variant="outline" onClick={() => exportQRCodes(tabValue === "all" ? null : tabValue)}>
-                  Export QR Codes
-                </Button>
+                <Select
+                  onValueChange={(value) => handleExport(tabValue === "all" ? null : tabValue, value as 'csv' | 'zip')}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Export QR Codes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="csv">Export as CSV</SelectItem>
+                    <SelectItem value="zip">Export as ZIP (PNG files)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
