@@ -87,13 +87,47 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
     },
   });
 
+  const createQRMutation = useMutation({
+    mutationFn: async ({ name, redirectUrl, folderId }: { name: string; redirectUrl: string; folderId: string | null }) => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.user.id) throw new Error("No user found");
+
+      const { error } = await supabase
+        .from("qr_codes")
+        .insert([
+          {
+            name,
+            redirect_url: redirectUrl,
+            project_id: folderId,
+            user_id: session.session.user.id
+          }
+        ]);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["qrCodes"] });
+      setIsCreateQROpen(false);
+      toast({
+        title: "Success",
+        description: "QR code created successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create QR code.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleProjectChange = (qrId: string, projectId: string | null) => {
     updateProjectMutation.mutate({ qrId, projectId });
   };
 
   const handleCreateQR = (name: string, redirectUrl: string, folderId: string | null) => {
-    // Add your create QR code logic here
-    console.log('Creating QR code:', { name, redirectUrl, folderId });
+    createQRMutation.mutate({ name, redirectUrl, folderId });
   };
 
   return (
