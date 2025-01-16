@@ -1,3 +1,17 @@
-[functions]
-[functions.send-email]
-verify_jwt = true
+project_id = "ryxmobnjjmvwchqcjmup"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[db]
+port = 54322
+
+[studio]
+enabled = true
+port = 54323
+
+[[functions]]
+name = "scan-qr"
+verify_jwt = false

@@ -104,6 +104,59 @@ export type Database = {
           },
         ]
       }
+      qr_scans: {
+        Row: {
+          browser: string | null
+          city: string | null
+          country: string | null
+          created_at: string | null
+          device_type: string | null
+          id: string
+          ip_address: string | null
+          os: string | null
+          qr_code_id: string
+          referrer: string | null
+          scanned_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          ip_address?: string | null
+          os?: string | null
+          qr_code_id: string
+          referrer?: string | null
+          scanned_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          ip_address?: string | null
+          os?: string | null
+          qr_code_id?: string
+          referrer?: string | null
+          scanned_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_scans_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -112,6 +165,14 @@ export type Database = {
       get_project_total_scans: {
         Args: {
           project_id: string
+        }
+        Returns: number
+      }
+      get_qr_scans_in_range: {
+        Args: {
+          qr_id: string
+          start_date: string
+          end_date: string
         }
         Returns: number
       }
