@@ -163,7 +163,7 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
           onCreateFolder={() => createFolderMutation.mutate()}
         />
 
-        {["all", "no-folder", ...projects.map(p => p.id)].map((tabValue) => (
+        {["all", ...projects.map(p => p.id)].map((tabValue) => (
           <TabsContent key={tabValue} value={tabValue}>
             <ActionBar
               qrCodes={qrCodes}

@@ -24,12 +24,9 @@ export const TabsHeader = ({
   onCreateFolder,
 }: TabsHeaderProps) => {
   return (
-    <TabsList className="mb-4 flex items-center justify-start gap-2 p-1j">
+    <TabsList className="mb-4 flex items-center justify-start gap-2 p-1">
       <TabsTrigger value="all">
         All QR Codes ({qrCodes.length})
-      </TabsTrigger>
-      <TabsTrigger value="no-folder">
-        No Folder ({qrCodes.filter(qr => !qr.projectId).length})
       </TabsTrigger>
       {projects.map((project) => (
         <TabsTrigger key={project.id} value={project.id}>
