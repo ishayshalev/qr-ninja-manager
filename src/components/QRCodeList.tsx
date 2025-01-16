@@ -242,7 +242,7 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
                 <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
               </div>
               <div className="flex gap-4">
-                <Button variant="primary">
+                <Button variant="default">
                   Create QR Code
                 </Button>
                 <Button variant="outline" onClick={() => exportQRCodes(tabValue === "all" ? null : tabValue)}>
