@@ -1,20 +1,17 @@
 import { QRCode } from "@/types/qr";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Download, Link, Plus } from "lucide-react";
-import { QRCodeCanvas } from "qrcode.react";
+import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { TimeRangeSelector } from "./TimeRangeSelector";
-import { TimeRange } from "@/types/qr";
 import { CreateQRDialog } from "./CreateQRDialog";
-import JSZip from 'jszip';
+import { QRCard } from "./QRCard";
+import { QRExportOptions } from "./QRExportOptions";
 
 interface QRCodeListProps {
   qrCodes: QRCode[];
@@ -28,7 +25,7 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [isCreateQROpen, setIsCreateQROpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  const [timeRange, setTimeRange] = useState<TimeRange>("all");
+  const [timeRange, setTimeRange] = useState("all");
 
   const updateProjectMutation = useMutation({
     mutationFn: async ({ qrId, projectId }: { qrId: string; projectId: string | null }) => {
@@ -90,147 +87,9 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
     },
   });
 
-  const downloadQRCode = (id: string, name: string) => {
-    const canvas = document.getElementById(id) as HTMLCanvasElement;
-    if (canvas) {
-      const pngUrl = canvas
-        .toDataURL("image/png")
-        .replace("image/png", "image/octet-stream");
-      const downloadLink = document.createElement("a");
-      downloadLink.href = pngUrl;
-      downloadLink.download = `${name}-qr.png`;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-      
-      toast({
-        title: "QR Code Downloaded",
-        description: "Your QR code has been downloaded successfully.",
-      });
-    }
-  };
-
   const handleProjectChange = (qrId: string, projectId: string | null) => {
     updateProjectMutation.mutate({ qrId, projectId });
   };
-
-  const exportQRCodesAsZip = async (qrCodesToExport: QRCode[]) => {
-    const zip = new JSZip();
-    
-    for (const qr of qrCodesToExport) {
-      const canvas = document.getElementById(qr.id) as HTMLCanvasElement;
-      if (canvas) {
-        const pngData = canvas.toDataURL("image/png").split(',')[1];
-        zip.file(`${qr.name}-qr.png`, pngData, { base64: true });
-      }
-    }
-    
-    const blob = await zip.generateAsync({ type: "blob" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "qr-codes.zip";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast({
-      title: "QR Codes Downloaded",
-      description: "Your QR codes have been downloaded as a ZIP file.",
-    });
-  };
-
-  const exportQRCodesAsCSV = (projectId: string | null) => {
-    const qrCodesToExport = projectId 
-      ? qrCodes.filter(qr => qr.projectId === projectId)
-      : qrCodes;
-    
-    const csvContent = "Name,URL,Total Scans\n" + 
-      qrCodesToExport.map(qr => 
-        `${qr.name},${qr.redirectUrl},${qr.usageCount}`
-      ).join("\n");
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `qr-codes${projectId ? '-' + projects.find(p => p.id === projectId)?.name : ''}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast({
-      title: "QR Codes Exported",
-      description: "Your QR codes have been exported as a CSV file.",
-    });
-  };
-
-  const handleExport = (projectId: string | null, type: 'csv' | 'zip') => {
-    const qrCodesToExport = projectId 
-      ? qrCodes.filter(qr => qr.projectId === projectId)
-      : qrCodes;
-
-    if (type === 'csv') {
-      exportQRCodesAsCSV(projectId);
-    } else {
-      exportQRCodesAsZip(qrCodesToExport);
-    }
-  };
-
-  const renderQRCodeCard = (qr: QRCode) => (
-    <Card key={qr.id} className="overflow-hidden">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold">{qr.name}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex justify-center mb-4">
-          <QRCodeCanvas
-            id={qr.id}
-            value={qr.redirectUrl}
-            size={200}
-            level="H"
-            includeMargin
-          />
-        </div>
-        
-        <div className="space-y-4">
-          <div className="flex items-center text-sm text-gray-600">
-            <Link className="h-4 w-4 mr-2" />
-            <span className="truncate">{qr.redirectUrl}</span>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 mb-1">Current location:</p>
-            <Select
-              value={qr.projectId || "none"}
-              onValueChange={(value) => handleProjectChange(qr.id, value === "none" ? null : value)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a folder" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No Folder</SelectItem>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="mt-4 flex justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => downloadQRCode(qr.id, qr.name)}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Download PNG
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
 
   const handleCreateQR = (name: string, redirectUrl: string, folderId: string | null) => {
     // Add your create QR code logic here
@@ -301,17 +160,11 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
                 <Button variant="default" onClick={() => setIsCreateQROpen(true)}>
                   Create QR Code
                 </Button>
-                <Select
-                  onValueChange={(value) => handleExport(tabValue === "all" ? null : tabValue, value as 'csv' | 'zip')}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Export QR Codes" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="csv">Export as CSV</SelectItem>
-                    <SelectItem value="zip">Export as ZIP (PNG files)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <QRExportOptions 
+                  qrCodes={qrCodes}
+                  projects={projects}
+                  currentProjectId={tabValue === "all" ? null : tabValue === "no-folder" ? null : tabValue}
+                />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -320,7 +173,14 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
                 : tabValue === "no-folder"
                   ? qrCodes.filter(qr => !qr.projectId)
                   : qrCodes.filter(qr => qr.projectId === tabValue)
-              ).map(renderQRCodeCard)}
+              ).map((qr) => (
+                <QRCard
+                  key={qr.id}
+                  qr={qr}
+                  projects={projects}
+                  onProjectChange={handleProjectChange}
+                />
+              ))}
             </div>
           </TabsContent>
         ))}
