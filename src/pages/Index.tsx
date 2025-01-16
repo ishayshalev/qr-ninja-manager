@@ -1,32 +1,18 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { CreateQRDialog } from "@/components/CreateQRDialog";
 import { QRCodeList } from "@/components/QRCodeList";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-
-export interface QRCode {
-  id: string;
-  name: string;
-  redirectUrl: string;
-  usageCount: number;
-  projectId: string | null;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  description: string | null;
-  totalScans: number;
-}
+import { Settings, LogOut, CreditCard } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
@@ -42,7 +28,6 @@ const Index = () => {
 
       if (projectsError) throw projectsError;
 
-      // Fetch total scans for each project
       const projectsWithScans = await Promise.all(
         projectsData.map(async (project) => {
           const { data: totalScans } = await supabase
@@ -83,50 +68,11 @@ const Index = () => {
     }
   });
 
-  const createQRMutation = useMutation({
-    mutationFn: async (newQR: { name: string; redirectUrl: string }) => {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session?.user.id) throw new Error("No user found");
-
-      const normalizedUrl = newQR.redirectUrl.startsWith('http://') || newQR.redirectUrl.startsWith('https://')
-        ? newQR.redirectUrl
-        : `https://${newQR.redirectUrl}`;
-
-      const { data, error } = await supabase
-        .from("qr_codes")
-        .insert([
-          {
-            name: newQR.name,
-            redirect_url: normalizedUrl,
-            user_id: session.session.user.id
-          }
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["qrCodes"] });
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      toast({
-        title: "QR Code Created",
-        description: "Your QR code has been created successfully.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to create QR code. Please try again.",
-        variant: "destructive",
-      });
-      console.error("Error creating QR code:", error);
-    },
-  });
-
-  const handleCreateQR = (name: string, redirectUrl: string) => {
-    createQRMutation.mutate({ name, redirectUrl });
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (!error) {
+      navigate("/auth");
+    }
   };
 
   if (isLoadingProjects || isLoadingQRCodes) {
@@ -134,33 +80,45 @@ const Index = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">QR Code Manager</h1>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => setIsCreateDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create QR Code
-          </Button>
-          <Button onClick={() => navigate("/settings")}>Settings</Button>
+    <div className="min-h-screen bg-background">
+      <div className="border-b">
+        <div className="container mx-auto flex justify-between items-center py-4">
+          <h1 className="text-2xl font-bold">QR Code Manager</h1>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Settings className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => navigate("/settings")}>
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <CreditCard className="mr-2 h-4 w-4" />
+                Billing
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
-      <QRCodeList
-        qrCodes={qrCodes}
-        setQRCodes={(qrs) => {
-          if (Array.isArray(qrs)) {
-            queryClient.setQueryData(["qrCodes"], qrs);
-          }
-        }}
-        projects={projects}
-      />
-
-      <CreateQRDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        onCreateQR={handleCreateQR}
-      />
+      <div className="container mx-auto py-8">
+        <QRCodeList
+          qrCodes={qrCodes}
+          setQRCodes={(qrs) => {
+            if (Array.isArray(qrs)) {
+              queryClient.setQueryData(["qrCodes"], qrs);
+            }
+          }}
+          projects={projects}
+        />
+      </div>
     </div>
   );
 };

@@ -3,8 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { BarChart2, Download, Link, GripVertical, Plus } from "lucide-react";
+import { Download, Link, GripVertical, Plus } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,7 +23,6 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
   const queryClient = useQueryClient();
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  const [newFolderDescription, setNewFolderDescription] = useState("");
 
   const updateProjectMutation = useMutation({
     mutationFn: async ({ qrId, projectId }: { qrId: string; projectId: string | null }) => {
@@ -62,7 +60,6 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
         .insert([
           {
             name: newFolderName,
-            description: newFolderDescription,
             user_id: session.session.user.id
           }
         ]);
@@ -73,7 +70,6 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       setIsCreateFolderOpen(false);
       setNewFolderName("");
-      setNewFolderDescription("");
       toast({
         title: "Success",
         description: "Folder created successfully.",
@@ -116,21 +112,6 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
     updateProjectMutation.mutate({ qrId, projectId });
   };
 
-  const getTotalScans = (projectId: string | null) => {
-    if (projectId === null) {
-      return qrCodes
-        .filter(qr => !qr.projectId)
-        .reduce((sum, qr) => sum + (qr.usageCount || 0), 0);
-    }
-    return qrCodes
-      .filter(qr => qr.projectId === projectId)
-      .reduce((sum, qr) => sum + (qr.usageCount || 0), 0);
-  };
-
-  const getAllScans = () => {
-    return qrCodes.reduce((sum, qr) => sum + (qr.usageCount || 0), 0);
-  };
-
   const renderQRCodeCard = (qr: QRCode) => (
     <Card 
       key={qr.id} 
@@ -159,10 +140,6 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
           <div className="flex items-center text-sm text-gray-600">
             <Link className="h-4 w-4 mr-2" />
             <span className="truncate">{qr.redirectUrl}</span>
-          </div>
-          <div className="flex items-center text-sm text-gray-600">
-            <BarChart2 className="h-4 w-4 mr-2" />
-            <span>{qr.usageCount} scans</span>
           </div>
           <div>
             <p className="text-sm text-gray-600 mb-1">Current location:</p>
@@ -199,28 +176,19 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
     </Card>
   );
 
-  if (qrCodes.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <h3 className="text-lg font-medium text-gray-600">No QR codes yet</h3>
-        <p className="text-gray-500 mt-2">Create your first QR code to get started</p>
-      </div>
-    );
-  }
-
   return (
     <div>
       <Tabs defaultValue="all" className="w-full">
         <TabsList className="mb-4 flex-wrap">
           <TabsTrigger value="all">
-            All QR Codes ({qrCodes.length}) - {getAllScans()} scans
+            All QR Codes ({qrCodes.length})
           </TabsTrigger>
           <TabsTrigger value="no-folder">
-            No Folder ({qrCodes.filter(qr => !qr.projectId).length}) - {getTotalScans(null)} scans
+            No Folder ({qrCodes.filter(qr => !qr.projectId).length})
           </TabsTrigger>
           {projects.map((project) => (
             <TabsTrigger key={project.id} value={project.id}>
-              {project.name} ({qrCodes.filter(qr => qr.projectId === project.id).length}) - {project.totalScans} scans
+              {project.name} ({qrCodes.filter(qr => qr.projectId === project.id).length})
             </TabsTrigger>
           ))}
           <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
@@ -240,14 +208,6 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
                     value={newFolderName}
                     onChange={(e) => setNewFolderName(e.target.value)}
                     placeholder="Folder name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Description</label>
-                  <Textarea
-                    value={newFolderDescription}
-                    onChange={(e) => setNewFolderDescription(e.target.value)}
-                    placeholder="Folder description"
                   />
                 </div>
                 <Button onClick={() => createFolderMutation.mutate()}>Create Folder</Button>
