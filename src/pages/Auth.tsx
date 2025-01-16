@@ -7,16 +7,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const isProduction = window.location.hostname !== 'localhost';
+  const redirectUrl = isProduction 
+    ? 'https://app.qrmanager.co/auth/callback'
+    : `${window.location.origin}/auth/callback`;
 
   useEffect(() => {
+    console.log('Auth component mounted, redirect URL:', redirectUrl);
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session);
       if (event === "SIGNED_IN" && session) {
+        console.log('User signed in, navigating to home');
         navigate("/");
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, redirectUrl]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -39,7 +46,7 @@ const Auth = () => {
               },
             }}
             providers={["google"]}
-            redirectTo={`${window.location.origin}/auth/callback`}
+            redirectTo={redirectUrl}
           />
         </CardContent>
       </Card>
