@@ -6,4 +6,4 @@ export interface QRCode {
   projectId: string | null;
 }
 
-export type TimeRange = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'all';
+export type TimeRange = "daily" | "weekly" | "monthly" | "yearly" | "all";

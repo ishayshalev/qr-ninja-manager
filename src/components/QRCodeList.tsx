@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Download, Link, GripVertical, Plus } from "lucide-react";
+import { Download, Link, Plus } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,6 +11,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { TimeRangeSelector } from "./TimeRangeSelector";
+import { TimeRange } from "@/types/qr";
 
 interface QRCodeListProps {
   qrCodes: QRCode[];
@@ -23,6 +25,7 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
   const queryClient = useQueryClient();
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+  const [timeRange, setTimeRange] = useState<TimeRange>("all");
 
   const updateProjectMutation = useMutation({
     mutationFn: async ({ qrId, projectId }: { qrId: string; projectId: string | null }) => {
@@ -104,24 +107,32 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
     }
   };
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, qrId: string) => {
-    e.dataTransfer.setData("qrId", qrId);
-  };
-
   const handleProjectChange = (qrId: string, projectId: string | null) => {
     updateProjectMutation.mutate({ qrId, projectId });
   };
 
+  const exportQRCodes = (projectId: string | null) => {
+    const qrCodesToExport = projectId 
+      ? qrCodes.filter(qr => qr.projectId === projectId)
+      : qrCodes;
+    
+    const csvContent = "Name,URL,Total Scans\n" + 
+      qrCodesToExport.map(qr => 
+        `${qr.name},${qr.redirectUrl},${qr.usageCount}`
+      ).join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `qr-codes${projectId ? '-' + projects.find(p => p.id === projectId)?.name : ''}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const renderQRCodeCard = (qr: QRCode) => (
-    <Card 
-      key={qr.id} 
-      className="overflow-hidden relative"
-      draggable
-      onDragStart={(e) => handleDragStart(e, qr.id)}
-    >
-      <div className="absolute top-2 right-2 cursor-move">
-        <GripVertical className="h-5 w-5 text-gray-400" />
-      </div>
+    <Card key={qr.id} className="overflow-hidden">
       <CardHeader className="pb-4">
         <CardTitle className="text-lg font-semibold">{qr.name}</CardTitle>
       </CardHeader>
@@ -216,22 +227,33 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
           </Dialog>
         </TabsList>
 
-        <TabsContent value="all">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {qrCodes.map((qr) => renderQRCodeCard(qr))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="no-folder">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {qrCodes.filter(qr => !qr.projectId).map((qr) => renderQRCodeCard(qr))}
-          </div>
-        </TabsContent>
-
-        {projects.map((project) => (
-          <TabsContent key={project.id} value={project.id}>
+        {["all", "no-folder", ...projects.map(p => p.id)].map((tabValue) => (
+          <TabsContent key={tabValue} value={tabValue}>
+            <div className="mb-6 flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-gray-600">
+                  Total Scans: {tabValue === "all" 
+                    ? qrCodes.reduce((acc, qr) => acc + (qr.usageCount || 0), 0)
+                    : tabValue === "no-folder"
+                      ? qrCodes.filter(qr => !qr.projectId).reduce((acc, qr) => acc + (qr.usageCount || 0), 0)
+                      : qrCodes.filter(qr => qr.projectId === tabValue).reduce((acc, qr) => acc + (qr.usageCount || 0), 0)
+                  }
+                </div>
+                <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
+              </div>
+              <div className="flex gap-4">
+                <Button variant="outline" onClick={() => exportQRCodes(tabValue === "all" ? null : tabValue)}>
+                  Export QR Codes
+                </Button>
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {qrCodes.filter(qr => qr.projectId === project.id).map((qr) => renderQRCodeCard(qr))}
+              {(tabValue === "all" 
+                ? qrCodes
+                : tabValue === "no-folder"
+                  ? qrCodes.filter(qr => !qr.projectId)
+                  : qrCodes.filter(qr => qr.projectId === tabValue)
+              ).map(renderQRCodeCard)}
             </div>
           </TabsContent>
         ))}
