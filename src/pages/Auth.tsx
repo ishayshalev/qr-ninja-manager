@@ -1,12 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
   const isProduction = window.location.hostname !== 'localhost';
   const redirectUrl = isProduction 
     ? 'https://app.qrmanager.co'
@@ -20,21 +22,33 @@ const Auth = () => {
       const hash = window.location.hash;
       if (hash && hash.includes('access_token')) {
         console.log('Detected OAuth callback, setting session...');
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (session && !error) {
-          console.log('Session set successfully, navigating to home');
-          navigate("/");
+        try {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (error) throw error;
+          if (session) {
+            console.log('Session set successfully, navigating to home');
+            navigate("/");
+          }
+        } catch (err) {
+          console.error('Error handling OAuth callback:', err);
+          setError('Failed to complete authentication. Please try again.');
         }
       }
     };
 
     // Check if user is already logged in
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('Current session:', session);
-      if (session) {
-        console.log('User already logged in, navigating to home');
-        navigate("/");
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        console.log('Current session:', session);
+        if (session) {
+          console.log('User already logged in, navigating to home');
+          navigate("/");
+        }
+      } catch (err) {
+        console.error('Error checking session:', err);
+        setError('Failed to check authentication status.');
       }
     };
 
@@ -48,6 +62,10 @@ const Auth = () => {
         console.log('User signed in, navigating to home');
         navigate("/");
       }
+      if (event === "SIGNED_OUT") {
+        console.log('User signed out');
+        setError(null);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -60,6 +78,11 @@ const Auth = () => {
           <CardTitle className="text-2xl text-center">Welcome to QR Manager</CardTitle>
         </CardHeader>
         <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           <SupabaseAuth 
             supabaseClient={supabase} 
             appearance={{ 

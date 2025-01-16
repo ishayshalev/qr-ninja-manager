@@ -10,17 +10,32 @@ const queryClient = new QueryClient();
 const Index = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     console.log('Index component mounted, checking session...');
+    let mounted = true;
+
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('Current session:', session);
-      if (!session) {
-        console.log('No session found, redirecting to auth');
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        
+        console.log('Current session:', session);
+        if (!session) {
+          console.log('No session found, redirecting to auth');
+          navigate("/auth");
+          return;
+        }
+        
+        if (mounted) {
+          setIsAuthenticated(true);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error('Error checking session:', err);
         navigate("/auth");
       }
-      setIsLoading(false);
     };
 
     checkSession();
@@ -32,7 +47,10 @@ const Index = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
@@ -62,7 +80,8 @@ const Index = () => {
       );
 
       return projectsWithScans;
-    }
+    },
+    enabled: isAuthenticated, // Only run query when authenticated
   });
 
   const { data: qrCodes = [], isLoading: isLoadingQRCodes } = useQuery({
@@ -84,7 +103,8 @@ const Index = () => {
         usageCount: qr.usage_count || 0,
         projectId: qr.project_id
       }));
-    }
+    },
+    enabled: isAuthenticated, // Only run query when authenticated
   });
 
   if (isLoading || isLoadingProjects || isLoadingQRCodes) {
