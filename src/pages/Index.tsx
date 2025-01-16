@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { QRCodeList } from "@/components/QRCodeList";
 import { useQuery, QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,19 @@ import { QRCode } from "@/types/qr";
 const queryClient = new QueryClient();
 
 const Index = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log('Index component mounted, checking session...');
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Current session:', session);
+      if (!session) {
+        console.log('No session found, redirecting to auth');
+        navigate("/auth");
+      }
+    });
+  }, [navigate]);
+
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {

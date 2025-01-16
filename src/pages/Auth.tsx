@@ -9,11 +9,22 @@ const Auth = () => {
   const navigate = useNavigate();
   const isProduction = window.location.hostname !== 'localhost';
   const redirectUrl = isProduction 
-    ? 'https://app.qrmanager.co/auth/callback'
-    : `${window.location.origin}/auth/callback`;
+    ? 'https://app.qrmanager.co'
+    : window.location.origin;
 
   useEffect(() => {
-    console.log('Auth component mounted, redirect URL:', redirectUrl);
+    console.log('Auth component mounted, checking session...');
+    
+    // Check if user is already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Current session:', session);
+      if (session) {
+        console.log('User already logged in, navigating to home');
+        navigate("/");
+      }
+    });
+
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event, session);
       if (event === "SIGNED_IN" && session) {
@@ -23,7 +34,7 @@ const Auth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, redirectUrl]);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
