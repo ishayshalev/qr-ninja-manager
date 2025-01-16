@@ -58,6 +58,17 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user.id) throw new Error("No user found");
 
+      // First check if a project with this name already exists for this user
+      const { data: existingProjects } = await supabase
+        .from("projects")
+        .select("name")
+        .eq("user_id", session.session.user.id)
+        .eq("name", newFolderName);
+
+      if (existingProjects && existingProjects.length > 0) {
+        throw new Error("A folder with this name already exists");
+      }
+
       console.log("Creating folder with user ID:", session.session.user.id);
       const { data, error } = await supabase
         .from("projects")
@@ -88,7 +99,7 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
       console.error("Create folder mutation error:", error);
       toast({
         title: "Error",
-        description: "Failed to create folder.",
+        description: error instanceof Error ? error.message : "Failed to create folder.",
         variant: "destructive",
       });
     },
