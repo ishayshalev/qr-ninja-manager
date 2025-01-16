@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { QRCodeList } from "@/components/QRCodeList";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Settings, LogOut, CreditCard } from "lucide-react";
@@ -11,6 +11,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+
+// Export the QRCode type interface
+export interface QRCode {
+  id: string;
+  name: string;
+  redirectUrl: string;
+  usageCount: number;
+  projectId: string | null;
+}
+
+const queryClient = new QueryClient();
 
 const Index = () => {
   const navigate = useNavigate();
