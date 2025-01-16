@@ -188,9 +188,9 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
   );
 
   return (
-    <div>
+    <div className="w-full">
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="mb-4 flex-wrap">
+        <TabsList className="mb-4 flex justify-start flex-wrap">
           <TabsTrigger value="all">
             All QR Codes ({qrCodes.length})
           </TabsTrigger>
@@ -242,6 +242,9 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
                 <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
               </div>
               <div className="flex gap-4">
+                <Button variant="primary">
+                  Create QR Code
+                </Button>
                 <Button variant="outline" onClick={() => exportQRCodes(tabValue === "all" ? null : tabValue)}>
                   Export QR Codes
                 </Button>
