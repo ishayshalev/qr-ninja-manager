@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { QRCodeList } from "@/components/QRCodeList";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
 
@@ -9,6 +9,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     console.log('Index component mounted, checking session...');
