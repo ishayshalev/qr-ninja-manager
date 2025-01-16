@@ -1,7 +1,7 @@
 import { QRCode } from "@/types/qr";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Link, Trash2 } from "lucide-react";
+import { Download, Link, Trash2, BarChart2 } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -72,7 +72,13 @@ export const QRCard = ({ qr, projects, onProjectChange }: QRCardProps) => {
   return (
     <Card key={qr.id} className="overflow-hidden">
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold">{qr.name}</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-lg font-semibold">{qr.name}</CardTitle>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <BarChart2 className="h-4 w-4" />
+            <span>{qr.usageCount || 0} scans</span>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="flex justify-center mb-4">
