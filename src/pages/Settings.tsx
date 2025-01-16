@@ -4,20 +4,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const Settings = () => {
   const [email, setEmail] = useState("");
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadUserProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setEmail(session.user.email || "");
+      } else {
+        navigate("/auth");
       }
     };
     loadUserProfile();
-  }, []);
+  }, [navigate]);
 
   const handleUpdateProfile = async () => {
     const { error } = await supabase.auth.updateUser({ email });
@@ -35,9 +39,27 @@ const Settings = () => {
     }
   };
 
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    } else {
+      navigate("/auth");
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8">Account Settings</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Account Settings</h1>
+        <Button variant="destructive" onClick={handleSignOut}>
+          Sign Out
+        </Button>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>Profile Information</CardTitle>

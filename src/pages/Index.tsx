@@ -7,6 +7,7 @@ import { ProjectList } from "@/components/ProjectList";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 export interface QRCode {
   id: string;
@@ -28,6 +29,7 @@ const Index = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
     queryKey: ["projects"],
@@ -185,10 +187,13 @@ const Index = () => {
     <div className="container mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">QR Code Manager</h1>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create QR Code
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => setIsCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create QR Code
+          </Button>
+          <Button onClick={() => navigate("/settings")}>Settings</Button>
+        </div>
       </div>
 
       <ProjectList
@@ -205,6 +210,7 @@ const Index = () => {
             queryClient.setQueryData(["qrCodes", selectedProjectId], qrs);
           }
         }}
+        projects={projects}
       />
 
       <CreateQRDialog
