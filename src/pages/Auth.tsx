@@ -16,6 +16,7 @@ const Auth = () => {
 
   useEffect(() => {
     console.log('Auth component mounted, checking session...');
+    let mounted = true;
     
     // Handle the OAuth callback
     const handleOAuthCallback = async () => {
@@ -25,9 +26,9 @@ const Auth = () => {
         try {
           const { data: { session }, error } = await supabase.auth.getSession();
           if (error) throw error;
-          if (session) {
+          if (session && mounted) {
             console.log('Session set successfully, navigating to home');
-            navigate("/");
+            navigate("/", { replace: true });
           }
         } catch (err) {
           console.error('Error handling OAuth callback:', err);
@@ -42,9 +43,9 @@ const Auth = () => {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
         console.log('Current session:', session);
-        if (session) {
+        if (session && mounted) {
           console.log('User already logged in, navigating to home');
-          navigate("/");
+          navigate("/", { replace: true });
         }
       } catch (err) {
         console.error('Error checking session:', err);
@@ -58,9 +59,9 @@ const Auth = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event, session);
-      if (event === "SIGNED_IN" && session) {
+      if (event === "SIGNED_IN" && session && mounted) {
         console.log('User signed in, navigating to home');
-        navigate("/");
+        navigate("/", { replace: true });
       }
       if (event === "SIGNED_OUT") {
         console.log('User signed out');
@@ -68,7 +69,10 @@ const Auth = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   return (

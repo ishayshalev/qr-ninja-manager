@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { QRCodeList } from "@/components/QRCodeList";
-import { useQuery, QueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
-
-const queryClient = new QueryClient();
 
 const Index = () => {
   const navigate = useNavigate();
@@ -24,7 +22,7 @@ const Index = () => {
         console.log('Current session:', session);
         if (!session) {
           console.log('No session found, redirecting to auth');
-          navigate("/auth");
+          navigate("/auth", { replace: true });
           return;
         }
         
@@ -34,7 +32,7 @@ const Index = () => {
         }
       } catch (err) {
         console.error('Error checking session:', err);
-        navigate("/auth");
+        navigate("/auth", { replace: true });
       }
     };
 
@@ -42,8 +40,8 @@ const Index = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event, session);
-      if (!session) {
-        navigate("/auth");
+      if (!session && mounted) {
+        navigate("/auth", { replace: true });
       }
     });
 
@@ -81,7 +79,7 @@ const Index = () => {
 
       return projectsWithScans;
     },
-    enabled: isAuthenticated, // Only run query when authenticated
+    enabled: isAuthenticated,
   });
 
   const { data: qrCodes = [], isLoading: isLoadingQRCodes } = useQuery({
@@ -104,7 +102,7 @@ const Index = () => {
         projectId: qr.project_id
       }));
     },
-    enabled: isAuthenticated, // Only run query when authenticated
+    enabled: isAuthenticated,
   });
 
   if (isLoading || isLoadingProjects || isLoadingQRCodes) {
