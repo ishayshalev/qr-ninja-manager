@@ -157,7 +157,7 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
         folders={projects}
       />
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="mb-4 flex justify-start flex-wrap p-4 h-11">
+        <TabsList className="mb-4 flex items-center justify-center gap-2 p-2">
           <TabsTrigger value="all">
             All QR Codes ({qrCodes.length})
           </TabsTrigger>
