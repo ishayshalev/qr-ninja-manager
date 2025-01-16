@@ -15,14 +15,31 @@ const Auth = () => {
   useEffect(() => {
     console.log('Auth component mounted, checking session...');
     
+    // Handle the OAuth callback
+    const handleOAuthCallback = async () => {
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token')) {
+        console.log('Detected OAuth callback, setting session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (session && !error) {
+          console.log('Session set successfully, navigating to home');
+          navigate("/");
+        }
+      }
+    };
+
     // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       console.log('Current session:', session);
       if (session) {
         console.log('User already logged in, navigating to home');
         navigate("/");
       }
-    });
+    };
+
+    handleOAuthCallback();
+    checkSession();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {

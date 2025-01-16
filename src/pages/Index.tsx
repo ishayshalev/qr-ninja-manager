@@ -9,16 +9,21 @@ const queryClient = new QueryClient();
 
 const Index = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     console.log('Index component mounted, checking session...');
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       console.log('Current session:', session);
       if (!session) {
         console.log('No session found, redirecting to auth');
         navigate("/auth");
       }
-    });
+      setIsLoading(false);
+    };
+
+    checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event, session);
@@ -82,7 +87,7 @@ const Index = () => {
     }
   });
 
-  if (isLoadingProjects || isLoadingQRCodes) {
+  if (isLoading || isLoadingProjects || isLoadingQRCodes) {
     return <div>Loading...</div>;
   }
 
