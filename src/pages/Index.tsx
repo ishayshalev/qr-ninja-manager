@@ -4,7 +4,6 @@ import { QRCodeList } from "@/components/QRCodeList";
 import { useQuery, QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/Header";
-import { QRCode } from "@/types/qr";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +19,15 @@ const Index = () => {
         navigate("/auth");
       }
     });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session);
+      if (!session) {
+        navigate("/auth");
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery({

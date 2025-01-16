@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -24,6 +24,7 @@ function App() {
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>
         <Toaster />
       </Router>
