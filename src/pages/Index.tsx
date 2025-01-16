@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { CreateQRDialog } from "@/components/CreateQRDialog";
 import { QRCodeList } from "@/components/QRCodeList";
-import { ProjectList } from "@/components/ProjectList";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -26,7 +25,6 @@ interface Project {
 
 const Index = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -64,21 +62,15 @@ const Index = () => {
   });
 
   const { data: qrCodes = [], isLoading: isLoadingQRCodes } = useQuery({
-    queryKey: ["qrCodes", selectedProjectId],
+    queryKey: ["qrCodes"],
     queryFn: async () => {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user.id) throw new Error("No user found");
 
-      let query = supabase
+      const { data, error } = await supabase
         .from("qr_codes")
         .select("*")
         .order("created_at", { ascending: false });
-
-      if (selectedProjectId) {
-        query = query.eq("project_id", selectedProjectId);
-      }
-
-      const { data, error } = await query;
 
       if (error) throw error;
       return data.map(qr => ({
@@ -89,43 +81,6 @@ const Index = () => {
         projectId: qr.project_id
       }));
     }
-  });
-
-  const createProjectMutation = useMutation({
-    mutationFn: async (newProject: { name: string; description: string }) => {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session?.user.id) throw new Error("No user found");
-
-      const { data, error } = await supabase
-        .from("projects")
-        .insert([
-          {
-            name: newProject.name,
-            description: newProject.description,
-            user_id: session.session.user.id
-          }
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      toast({
-        title: "Project Created",
-        description: "Your project has been created successfully.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to create project. Please try again.",
-        variant: "destructive",
-      });
-      console.error("Error creating project:", error);
-    },
   });
 
   const createQRMutation = useMutation({
@@ -143,8 +98,7 @@ const Index = () => {
           {
             name: newQR.name,
             redirect_url: normalizedUrl,
-            user_id: session.session.user.id,
-            project_id: selectedProjectId
+            user_id: session.session.user.id
           }
         ])
         .select()
@@ -171,10 +125,6 @@ const Index = () => {
     },
   });
 
-  const handleCreateProject = (name: string, description: string) => {
-    createProjectMutation.mutate({ name, description });
-  };
-
   const handleCreateQR = (name: string, redirectUrl: string) => {
     createQRMutation.mutate({ name, redirectUrl });
   };
@@ -196,18 +146,11 @@ const Index = () => {
         </div>
       </div>
 
-      <ProjectList
-        projects={projects}
-        onCreateProject={handleCreateProject}
-        onProjectSelect={setSelectedProjectId}
-        selectedProjectId={selectedProjectId}
-      />
-
       <QRCodeList
         qrCodes={qrCodes}
         setQRCodes={(qrs) => {
           if (Array.isArray(qrs)) {
-            queryClient.setQueryData(["qrCodes", selectedProjectId], qrs);
+            queryClient.setQueryData(["qrCodes"], qrs);
           }
         }}
         projects={projects}
