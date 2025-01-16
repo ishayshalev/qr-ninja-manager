@@ -117,12 +117,11 @@ export const QRCard = ({ qr, projects, onProjectChange }: QRCardProps) => {
           </div>
         </div>
 
-        <div className="mt-4 flex justify-end gap-2">
+        <div className="mt-4 flex justify-between items-center">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
+              <Button variant="outline" size="icon">
+                <Trash2 className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
