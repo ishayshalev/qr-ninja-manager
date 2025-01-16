@@ -24,7 +24,7 @@ export const TabsHeader = ({
   onCreateFolder,
 }: TabsHeaderProps) => {
   return (
-    <TabsList className="mb-4 flex items-center justify-start gap-2 p-2">
+    <TabsList className="mb-4 flex items-center justify-start gap-2 p-1j">
       <TabsTrigger value="all">
         All QR Codes ({qrCodes.length})
       </TabsTrigger>
