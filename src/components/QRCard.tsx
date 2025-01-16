@@ -96,8 +96,8 @@ export const QRCard = ({ qr, projects, onProjectChange }: QRCardProps) => {
             <Link className="h-4 w-4 mr-2" />
             <span className="truncate">{qr.redirectUrl}</span>
           </div>
-          <div>
-            <p className="text-sm text-gray-600 mb-1">Current location:</p>
+          <div className="container mx-auto, items-start">
+            <p className="text-sm text-gray-600 mb-1">Folder:</p>
             <Select
               value={qr.projectId || "none"}
               onValueChange={(value) => onProjectChange(qr.id, value === "none" ? null : value)}
