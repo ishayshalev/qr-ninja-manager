@@ -91,12 +91,12 @@ export const QRCard = ({ qr, projects, onProjectChange }: QRCardProps) => {
           />
         </div>
         
-        <div className="space-y-4">
-          <div className="flex items-center text-sm text-gray-600">
+        <div className="space-y-4 w-full">
+          <div className="flex items-center text-sm text-gray-600 w-full">
             <Link className="h-4 w-4 mr-2" />
             <span className="truncate">{qr.redirectUrl}</span>
           </div>
-          <div className="container mx-auto, items-start">
+          <div className="w-full text-left">
             <p className="text-sm text-gray-600 mb-1">Folder:</p>
             <Select
               value={qr.projectId || "none"}
