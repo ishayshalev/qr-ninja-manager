@@ -11,7 +11,7 @@ const Auth = () => {
   const [error, setError] = useState<string | null>(null);
   const isProduction = window.location.hostname !== 'localhost';
   const redirectUrl = isProduction 
-    ? 'https://app.qrmanager.co'
+    ? 'https://app.qrmanager.co/index'
     : window.location.origin;
 
   useEffect(() => {
