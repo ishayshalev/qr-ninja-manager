@@ -9,13 +9,17 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 const Auth = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
-  const isProduction = window.location.hostname !== 'localhost';
-  const redirectUrl = isProduction 
-    ? 'https://app.qrmanager.co/'
+  
+  // Update redirect URL based on environment
+  const redirectUrl = window.location.hostname === 'app.qrmanager.co'
+    ? 'https://app.qrmanager.co'
     : window.location.origin;
 
   useEffect(() => {
     console.log('Auth component mounted, checking session...');
+    console.log('Current hostname:', window.location.hostname);
+    console.log('Redirect URL:', redirectUrl);
+    
     let mounted = true;
     
     // Handle the OAuth callback
@@ -73,7 +77,7 @@ const Auth = () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, redirectUrl]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
