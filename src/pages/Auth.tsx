@@ -19,6 +19,7 @@ const Auth = () => {
     console.log('Auth component mounted, checking session...');
     console.log('Current hostname:', window.location.hostname);
     console.log('Redirect URL:', redirectUrl);
+    console.log('Current pathname:', window.location.pathname);
     
     let mounted = true;
     
