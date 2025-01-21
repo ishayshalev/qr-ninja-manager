@@ -38,7 +38,7 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b p-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pl-2">
           <div className="h-8 w-8 rounded-lg bg-primary"></div>
           <span className="text-lg font-semibold">QR Manager</span>
         </div>
@@ -51,6 +51,7 @@ export function AppSidebar() {
                 asChild
                 isActive={location.pathname === item.path}
                 tooltip={item.title}
+                className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
               >
                 <Link to={item.path}>
                   <item.icon className="h-4 w-4" />
