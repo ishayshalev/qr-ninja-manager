@@ -7,74 +7,100 @@ import { TimeRangeSelector } from "@/components/TimeRangeSelector";
 import { useState, useEffect } from "react";
 import { TimeRange } from "@/types/qr";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Analytics() {
   const [timeRange, setTimeRange] = useState<TimeRange>("monthly");
+  const [session, setSession] = useState<any>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  // Check authentication status
+  // Check and set authentication status
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Auth error:', error);
+        toast({
+          title: "Authentication Error",
+          description: "Please try logging in again",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+      if (!currentSession) {
         console.log('No session found, redirecting to auth');
         navigate("/auth");
+        return;
       }
+      setSession(currentSession);
     };
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      if (event === 'SIGNED_OUT' || !currentSession) {
         navigate("/auth");
+      } else {
+        setSession(currentSession);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const { data: scanData, isLoading } = useQuery({
-    queryKey: ['qr-scans', timeRange],
+    queryKey: ['qr-scans', timeRange, session?.user.id],
     queryFn: async () => {
-      console.log('Fetching scan data for timeRange:', timeRange);
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session?.user.id) {
-        console.error('No user found in session');
-        throw new Error("No user found");
-      }
-
-      const { data: qrCodes, error: qrError } = await supabase
-        .from('qr_codes')
-        .select('id, name')
-        .eq('user_id', session.session.user.id);
-
-      if (qrError) {
-        console.error('Error fetching QR codes:', qrError);
-        throw qrError;
-      }
-
-      if (!qrCodes || qrCodes.length === 0) {
-        console.log('No QR codes found for user');
+      if (!session?.user.id) {
+        console.log('No session user ID available');
         return [];
       }
 
-      const qrIds = qrCodes.map(qr => qr.id);
-      
-      const { data: scans, error: scansError } = await supabase
-        .from('qr_scans')
-        .select('*, qr_codes(name)')
-        .in('qr_code_id', qrIds)
-        .order('created_at', { ascending: false });
+      try {
+        console.log('Fetching scan data for timeRange:', timeRange);
+        const { data: qrCodes, error: qrError } = await supabase
+          .from('qr_codes')
+          .select('id, name')
+          .eq('user_id', session.user.id);
 
-      if (scansError) {
-        console.error('Error fetching scans:', scansError);
-        throw scansError;
+        if (qrError) {
+          console.error('Error fetching QR codes:', qrError);
+          throw qrError;
+        }
+
+        if (!qrCodes || qrCodes.length === 0) {
+          console.log('No QR codes found for user');
+          return [];
+        }
+
+        const qrIds = qrCodes.map(qr => qr.id);
+        
+        const { data: scans, error: scansError } = await supabase
+          .from('qr_scans')
+          .select('*, qr_codes(name)')
+          .in('qr_code_id', qrIds)
+          .order('created_at', { ascending: false });
+
+        if (scansError) {
+          console.error('Error fetching scans:', scansError);
+          throw scansError;
+        }
+
+        console.log('Fetched scan data:', scans);
+        return scans || [];
+      } catch (error) {
+        console.error('Error in scan data query:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch analytics data",
+          variant: "destructive",
+        });
+        return [];
       }
-
-      console.log('Fetched scan data:', scans);
-      return scans || [];
     },
-    enabled: true // The query will run automatically
+    enabled: !!session?.user.id // Only run query when we have a session
   });
 
   const { data: deviceStats } = useQuery({
