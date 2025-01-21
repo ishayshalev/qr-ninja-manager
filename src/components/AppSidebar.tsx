@@ -1,66 +1,13 @@
-import { Link, useLocation } from "react-router-dom";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
-import { BarChart2, Home, Settings, CreditCard } from "lucide-react";
-
-const menuItems = [
-  {
-    title: "Overview",
-    icon: Home,
-    path: "/",
-  },
-  {
-    title: "QR Analytics",
-    icon: BarChart2,
-    path: "/analytics",
-  },
-  {
-    title: "Settings",
-    icon: Settings,
-    path: "/settings",
-  },
-  {
-    title: "Billing",
-    icon: CreditCard,
-    path: "/billing",
-  },
-];
+import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
+import { SidebarHeader } from "@/components/sidebar/SidebarHeader";
+import { SidebarNavigation } from "@/components/sidebar/SidebarNavigation";
 
 export function AppSidebar() {
-  const location = useLocation();
-
   return (
     <Sidebar>
-      <SidebarHeader className="border-b p-4">
-        <div className="flex items-center gap-2 pl-2">
-          <div className="h-8 w-8 rounded-lg bg-primary"></div>
-          <span className="text-lg font-semibold">QR Manager</span>
-        </div>
-      </SidebarHeader>
+      <SidebarHeader />
       <SidebarContent>
-        <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton
-                asChild
-                isActive={location.pathname === item.path}
-                tooltip={item.title}
-                className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
-              >
-                <Link to={item.path}>
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
+        <SidebarNavigation />
       </SidebarContent>
     </Sidebar>
   );
