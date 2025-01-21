@@ -9,11 +9,39 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 const Auth = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  
+  const redirectUrl = window.location.hostname === 'app.qrmanager.co'
+    ? 'https://app.qrmanager.co'
+    : window.location.origin;
 
   useEffect(() => {
     console.log('Auth component mounted, checking session...');
+    console.log('Current hostname:', window.location.hostname);
+    console.log('Redirect URL:', redirectUrl);
+    console.log('Current pathname:', window.location.pathname);
+    
     let mounted = true;
+    
+    // Handle the OAuth callback
+    const handleOAuthCallback = async () => {
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token')) {
+        console.log('Detected OAuth callback, setting session...');
+        try {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (error) throw error;
+          if (session && mounted) {
+            console.log('Session set successfully, navigating to home');
+            navigate("/", { replace: true });
+          }
+        } catch (err) {
+          console.error('Error handling OAuth callback:', err);
+          setError('Failed to complete authentication. Please try again.');
+        }
+      }
+    };
 
+    // Check if user is already logged in
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -29,8 +57,10 @@ const Auth = () => {
       }
     };
 
+    handleOAuthCallback();
     checkSession();
 
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event, session);
       if (event === "SIGNED_IN" && session && mounted) {
@@ -47,7 +77,7 @@ const Auth = () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, redirectUrl]);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
@@ -75,6 +105,7 @@ const Auth = () => {
               },
             }}
             providers={["google"]}
+            redirectTo={redirectUrl}
           />
         </CardContent>
       </Card>
