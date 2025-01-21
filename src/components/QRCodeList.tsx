@@ -27,6 +27,7 @@ interface QRCodeListProps {
 
 export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) => {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -90,8 +91,8 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
         selectedProjectId={selectedProjectId}
       />
       <CreateQRDialog
-        open={true}
-        onOpenChange={() => {}}
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
         onCreateQR={(name, redirectUrl, folderId) => {
           const newQR = {
             id: crypto.randomUUID(),
@@ -100,6 +101,11 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
             projectId: folderId
           };
           setQRCodes([...qrCodes, newQR]);
+          setIsCreateDialogOpen(false);
+          toast({
+            title: "Success",
+            description: "QR code created successfully.",
+          });
         }}
         folders={projects.map(p => ({ id: p.id, name: p.name }))}
       />
