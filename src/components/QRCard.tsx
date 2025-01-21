@@ -1,17 +1,14 @@
 import { QRCode, TimeRange } from "@/types/qr";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Link, Trash2, BarChart2, Edit2 } from "lucide-react";
+import { Download, Link, Trash2, BarChart2 } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { startOfDay, subDays, subMonths, subWeeks, subYears } from "date-fns";
-import { useState } from "react";
 
 interface QRCardProps {
   qr: QRCode;
@@ -20,24 +17,9 @@ interface QRCardProps {
   timeRange: TimeRange;
 }
 
-const normalizeUrl = (url: string) => {
-  if (!url) return url;
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    url = 'https://' + url;
-  }
-  try {
-    const urlObj = new URL(url);
-    return urlObj.toString();
-  } catch (e) {
-    return url;
-  }
-};
-
 export const QRCard = ({ qr, projects, onProjectChange, timeRange = "all" }: QRCardProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [newUrl, setNewUrl] = useState(qr.redirectUrl);
 
   const getDateRange = () => {
     const endDate = new Date();
@@ -86,42 +68,6 @@ export const QRCard = ({ qr, projects, onProjectChange, timeRange = "all" }: QRC
       return data || 0;
     },
   });
-
-  const updateUrlMutation = useMutation({
-    mutationFn: async ({ qrId, newUrl }: { qrId: string; newUrl: string }) => {
-      console.log("Updating QR code URL:", qrId, newUrl);
-      const { error } = await supabase
-        .from("qr_codes")
-        .update({ redirect_url: newUrl })
-        .eq("id", qrId);
-      
-      if (error) {
-        console.error("Update URL error:", error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["qrCodes"] });
-      setIsEditDialogOpen(false);
-      toast({
-        title: "Success",
-        description: "QR code URL updated successfully.",
-      });
-    },
-    onError: (error) => {
-      console.error("Update URL mutation error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update QR code URL.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleUpdateUrl = () => {
-    const normalizedUrl = normalizeUrl(newUrl);
-    updateUrlMutation.mutate({ qrId: qr.id, newUrl: normalizedUrl });
-  };
 
   const deleteQRMutation = useMutation({
     mutationFn: async (qrId: string) => {
@@ -200,14 +146,9 @@ export const QRCard = ({ qr, projects, onProjectChange, timeRange = "all" }: QRC
         </div>
         
         <div className="space-y-4 w-full">
-          <div className="flex items-center justify-between text-sm text-gray-600 w-full">
-            <div className="flex items-center flex-1 mr-2">
-              <Link className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span className="truncate">{qr.redirectUrl}</span>
-            </div>
-            <Button variant="ghost" size="icon" onClick={() => setIsEditDialogOpen(true)}>
-              <Edit2 className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center text-sm text-gray-600 w-full">
+            <Link className="h-4 w-4 mr-2" />
+            <span className="truncate">{qr.redirectUrl}</span>
           </div>
           <div className="w-full text-left">
             <p className="text-sm text-gray-600 mb-1">Folder:</p>
@@ -264,24 +205,6 @@ export const QRCard = ({ qr, projects, onProjectChange, timeRange = "all" }: QRC
             Download PNG
           </Button>
         </div>
-
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit QR Code URL</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <Input
-                value={newUrl}
-                onChange={(e) => setNewUrl(e.target.value)}
-                placeholder="Enter new URL"
-              />
-              <div className="flex justify-end">
-                <Button onClick={handleUpdateUrl}>Save Changes</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </CardContent>
     </Card>
   );
