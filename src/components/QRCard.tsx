@@ -33,6 +33,11 @@ const normalizeUrl = (url: string) => {
   }
 };
 
+const getQrUrl = (qrId: string) => {
+  // This is the fixed URL that will be encoded in the QR code
+  return `${window.location.origin}/qr/${qrId}`;
+};
+
 export const QRCard = ({ qr, projects, onProjectChange, timeRange = "all" }: QRCardProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -173,6 +178,8 @@ export const QRCard = ({ qr, projects, onProjectChange, timeRange = "all" }: QRC
     }
   };
 
+  const qrUrl = getQrUrl(qr.id);
+
   return (
     <Card key={qr.id} className="overflow-hidden">
       <CardHeader className="pb-4">
@@ -192,7 +199,7 @@ export const QRCard = ({ qr, projects, onProjectChange, timeRange = "all" }: QRC
         <div className="flex justify-center mb-4">
           <QRCodeCanvas
             id={qr.id}
-            value={qr.redirectUrl}
+            value={qrUrl}
             size={200}
             level="H"
             includeMargin
@@ -200,15 +207,24 @@ export const QRCard = ({ qr, projects, onProjectChange, timeRange = "all" }: QRC
         </div>
         
         <div className="space-y-4 w-full">
-          <div className="flex items-center justify-between text-sm text-gray-600 w-full">
-            <div className="flex items-center flex-1 mr-2">
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center text-sm text-gray-600">
               <Link className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span className="truncate">{qr.redirectUrl}</span>
+              <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded truncate">
+                {qrUrl}
+              </span>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => setIsEditDialogOpen(true)}>
-              <Edit2 className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center justify-between text-sm text-gray-600 w-full">
+              <div className="flex items-center flex-1 mr-2">
+                <span className="text-xs">Redirects to: </span>
+                <span className="truncate ml-2 text-xs">{qr.redirectUrl}</span>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setIsEditDialogOpen(true)}>
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
+          
           <div className="w-full text-left">
             <p className="text-sm text-gray-600 mb-1">Folder:</p>
             <Select
@@ -268,13 +284,13 @@ export const QRCard = ({ qr, projects, onProjectChange, timeRange = "all" }: QRC
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit QR Code URL</DialogTitle>
+              <DialogTitle>Edit Redirect URL</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <Input
                 value={newUrl}
                 onChange={(e) => setNewUrl(e.target.value)}
-                placeholder="Enter new URL"
+                placeholder="Enter new redirect URL"
               />
               <div className="flex justify-end">
                 <Button onClick={handleUpdateUrl}>Save Changes</Button>
