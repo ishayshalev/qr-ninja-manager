@@ -31,7 +31,7 @@ export function TopBar({ totalScans }: TopBarProps) {
   };
 
   return (
-    <div className="flex items-center justify-between border-b bg-background py-4 pr-4">
+    <div className="flex items-center justify-between border-b bg-background p-4">
       <h1 className="text-2xl font-semibold">{getPageTitle()}</h1>
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2">
