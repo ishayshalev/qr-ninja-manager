@@ -15,7 +15,6 @@ interface Project {
   id: string;
   name: string;
   description: string | null;
-  totalScans: number;
 }
 
 interface ProjectListProps {
