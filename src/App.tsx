@@ -3,7 +3,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
-import Analytics from "./pages/Analytics";
 import { Layout } from "@/components/Layout";
 import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -38,14 +37,6 @@ function App() {
               element={
                 <Layout>
                   <Settings />
-                </Layout>
-              }
-            />
-            <Route
-              path="/analytics"
-              element={
-                <Layout>
-                  <Analytics />
                 </Layout>
               }
             />

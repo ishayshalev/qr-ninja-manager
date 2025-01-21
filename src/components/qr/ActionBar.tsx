@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { TimeRange, QRCode } from "@/types/qr";
-import { TimeRangeSelector } from "../TimeRangeSelector";
+import { QRCode } from "@/types/qr";
 import { QRExportOptions } from "../QRExportOptions";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
@@ -12,17 +11,13 @@ import { supabase } from "@/integrations/supabase/client";
 interface ActionBarProps {
   qrCodes: QRCode[];
   projects: Array<{ id: string; name: string }>;
-  timeRange: TimeRange;
-  setTimeRange: (range: TimeRange) => void;
-  setIsCreateQROpen: (open: boolean) => void;
   currentTabValue: string;
+  setIsCreateQROpen: (open: boolean) => void;
 }
 
 export const ActionBar = ({
   qrCodes,
   projects,
-  timeRange,
-  setTimeRange,
   setIsCreateQROpen,
   currentTabValue,
 }: ActionBarProps) => {
@@ -105,7 +100,6 @@ export const ActionBar = ({
         <div className="text-sm text-gray-600">
           Total Scans: {totalScans}
         </div>
-        <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
       </div>
       <div className="flex gap-4">
         {currentTabValue !== "all" && currentTabValue !== "no-folder" && (
