@@ -87,7 +87,7 @@ const Index = () => {
       return projectsData.map(project => ({
         id: project.id,
         name: project.name,
-        totalScans: 0,
+        description: project.description
       }));
     },
     enabled: isAuthenticated,
