@@ -4,11 +4,13 @@ import { QRCodeList } from "@/components/QRCodeList";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Layout } from "@/components/Layout";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     console.log('Index component mounted, checking session...');
@@ -35,6 +37,11 @@ const Index = () => {
         }
       } catch (err) {
         console.error('Error checking session:', err);
+        toast({
+          title: "Authentication Error",
+          description: "Please try logging in again",
+          variant: "destructive",
+        });
         navigate("/auth", { replace: true });
       }
     };
@@ -52,9 +59,9 @@ const Index = () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, toast]);
 
-  const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
+  const { data: projects = [], isLoading: isLoadingProjects, error: projectsError } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
       console.log('Fetching projects...');
@@ -93,9 +100,18 @@ const Index = () => {
       return projectsWithScans;
     },
     enabled: isAuthenticated,
+    retry: 3,
+    onError: (error) => {
+      console.error('Projects query error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load projects. Please try refreshing the page.",
+        variant: "destructive",
+      });
+    }
   });
 
-  const { data: qrCodes = [], isLoading: isLoadingQRCodes } = useQuery({
+  const { data: qrCodes = [], isLoading: isLoadingQRCodes, error: qrCodesError } = useQuery({
     queryKey: ["qrCodes"],
     queryFn: async () => {
       console.log('Fetching QR codes...');
@@ -126,12 +142,31 @@ const Index = () => {
       }));
     },
     enabled: isAuthenticated,
+    retry: 3,
+    onError: (error) => {
+      console.error('QR codes query error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load QR codes. Please try refreshing the page.",
+        variant: "destructive",
+      });
+    }
   });
 
   if (isLoading || isLoadingProjects || isLoadingQRCodes) {
     return (
       <Layout>
         <div className="p-4">Loading...</div>
+      </Layout>
+    );
+  }
+
+  if (projectsError || qrCodesError) {
+    return (
+      <Layout>
+        <div className="p-4 text-red-500">
+          Error loading data. Please try refreshing the page.
+        </div>
       </Layout>
     );
   }
@@ -144,7 +179,6 @@ const Index = () => {
         <QRCodeList
           qrCodes={qrCodes}
           setQRCodes={(qrs) => {
-            // Removed the queryClient.setQueryData call that was causing issues
             console.log("QR codes update requested:", qrs);
           }}
           projects={projects}
