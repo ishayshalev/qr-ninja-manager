@@ -61,7 +61,7 @@ const Index = () => {
     };
   }, [navigate, toast]);
 
-  const { data: projects = [], isLoading: isLoadingProjects, error: projectsError } = useQuery({
+  const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
       console.log('Fetching projects...');
@@ -84,36 +84,28 @@ const Index = () => {
 
       console.log('Projects fetched:', projectsData);
 
-      const projectsWithScans = await Promise.all(
-        projectsData.map(async (project) => {
-          const { data: totalScans } = await supabase
-            .rpc("get_project_total_scans", { project_id: project.id });
-
-          return {
-            id: project.id,
-            name: project.name,
-            totalScans: totalScans || 0,
-          };
-        })
-      );
-
-      return projectsWithScans;
+      return projectsData.map(project => ({
+        id: project.id,
+        name: project.name,
+        totalScans: 0, // Removed scan functionality
+      }));
     },
     enabled: isAuthenticated,
-    retry: 3,
+    retry: false,
     meta: {
-      onError: () => {
-        console.error('Projects query error:', projectsError);
+      onError: (error: Error) => {
+        console.error('Projects query error:', error);
         toast({
           title: "Error",
-          description: "Failed to load projects. Please try refreshing the page.",
+          description: "Failed to load projects. Please try logging in again.",
           variant: "destructive",
         });
+        navigate("/auth", { replace: true });
       }
     }
   });
 
-  const { data: qrCodes = [], isLoading: isLoadingQRCodes, error: qrCodesError } = useQuery({
+  const { data: qrCodes = [], isLoading: isLoadingQRCodes } = useQuery({
     queryKey: ["qrCodes"],
     queryFn: async () => {
       console.log('Fetching QR codes...');
@@ -139,20 +131,20 @@ const Index = () => {
         id: qr.id,
         name: qr.name,
         redirectUrl: qr.redirect_url,
-        usageCount: qr.usage_count || 0,
         projectId: qr.project_id
       }));
     },
     enabled: isAuthenticated,
-    retry: 3,
+    retry: false,
     meta: {
-      onError: () => {
-        console.error('QR codes query error:', qrCodesError);
+      onError: (error: Error) => {
+        console.error('QR codes query error:', error);
         toast({
           title: "Error",
-          description: "Failed to load QR codes. Please try refreshing the page.",
+          description: "Failed to load QR codes. Please try logging in again.",
           variant: "destructive",
         });
+        navigate("/auth", { replace: true });
       }
     }
   });
@@ -165,20 +157,8 @@ const Index = () => {
     );
   }
 
-  if (projectsError || qrCodesError) {
-    return (
-      <Layout>
-        <div className="p-4 text-red-500">
-          Error loading data. Please try refreshing the page.
-        </div>
-      </Layout>
-    );
-  }
-
-  const totalScans = qrCodes.reduce((total, qr) => total + (qr.usageCount || 0), 0);
-
   return (
-    <Layout totalScans={totalScans}>
+    <Layout>
       <div className="p-4">
         <QRCodeList
           qrCodes={qrCodes}
