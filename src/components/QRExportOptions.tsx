@@ -42,9 +42,9 @@ export const QRExportOptions = ({ qrCodes, projects, currentProjectId }: QRExpor
       ? qrCodes.filter(qr => qr.projectId === projectId)
       : qrCodes;
     
-    const csvContent = "Name,URL,Total Scans\n" + 
+    const csvContent = "Name,URL\n" + 
       qrCodesToExport.map(qr => 
-        `${qr.name},${qr.redirectUrl},${qr.usageCount}`
+        `${qr.name},${qr.redirectUrl}`
       ).join("\n");
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
