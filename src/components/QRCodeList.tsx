@@ -70,6 +70,13 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
     createProjectMutation.mutate({ name, description });
   };
 
+  const handleProjectChange = (qrId: string, projectId: string | null) => {
+    const updatedQRCodes = qrCodes.map(qr => 
+      qr.id === qrId ? { ...qr, projectId } : qr
+    );
+    setQRCodes(updatedQRCodes);
+  };
+
   const filteredQRCodes = selectedProjectId
     ? qrCodes.filter((qr) => qr.projectId === selectedProjectId)
     : qrCodes;
@@ -83,12 +90,25 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
         selectedProjectId={selectedProjectId}
       />
       <CreateQRDialog
-        onQRCreate={(newQR) => {
+        open={true}
+        onOpenChange={() => {}}
+        onCreateQR={(name, redirectUrl, folderId) => {
+          const newQR = {
+            id: crypto.randomUUID(),
+            name,
+            redirectUrl,
+            projectId: folderId
+          };
           setQRCodes([...qrCodes, newQR]);
         }}
-        projectId={selectedProjectId}
+        folders={projects.map(p => ({ id: p.id, name: p.name }))}
       />
-      <QRCodeGrid qrCodes={filteredQRCodes} />
+      <QRCodeGrid 
+        qrCodes={filteredQRCodes}
+        projects={projects}
+        currentTabValue={selectedProjectId || "all"}
+        onProjectChange={handleProjectChange}
+      />
     </div>
   );
 };
