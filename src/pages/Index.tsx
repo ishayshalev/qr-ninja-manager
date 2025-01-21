@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { QRCodeList } from "@/components/QRCodeList";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Layout } from "@/components/Layout";
 
@@ -9,7 +9,6 @@ const Index = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     console.log('Index component mounted, checking session...');
@@ -145,9 +144,8 @@ const Index = () => {
         <QRCodeList
           qrCodes={qrCodes}
           setQRCodes={(qrs) => {
-            if (Array.isArray(qrs)) {
-              queryClient.setQueryData(["qrCodes"], qrs);
-            }
+            // Removed the queryClient.setQueryData call that was causing issues
+            console.log("QR codes update requested:", qrs);
           }}
           projects={projects}
         />
