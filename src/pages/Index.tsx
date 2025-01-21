@@ -1,15 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { QRCodeList } from "@/components/QRCodeList";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { TopBar } from "@/components/TopBar";
+import { Layout } from "@/components/Layout";
 
 const Index = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     console.log('Index component mounted, checking session...');
@@ -18,7 +17,10 @@ const Index = () => {
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
+        if (error) {
+          console.error('Session check error:', error);
+          throw error;
+        }
         
         console.log('Current session:', session);
         if (!session) {
@@ -55,15 +57,25 @@ const Index = () => {
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
+      console.log('Fetching projects...');
       const { data: session } = await supabase.auth.getSession();
-      if (!session.session?.user.id) throw new Error("No user found");
+      if (!session.session?.user.id) {
+        console.error('No user found in session');
+        throw new Error("No user found");
+      }
 
       const { data: projectsData, error: projectsError } = await supabase
         .from("projects")
         .select("*")
+        .eq('user_id', session.session.user.id)
         .order("created_at", { ascending: false });
 
-      if (projectsError) throw projectsError;
+      if (projectsError) {
+        console.error('Projects fetch error:', projectsError);
+        throw projectsError;
+      }
+
+      console.log('Projects fetched:', projectsData);
 
       const projectsWithScans = await Promise.all(
         projectsData.map(async (project) => {
@@ -86,15 +98,25 @@ const Index = () => {
   const { data: qrCodes = [], isLoading: isLoadingQRCodes } = useQuery({
     queryKey: ["qrCodes"],
     queryFn: async () => {
+      console.log('Fetching QR codes...');
       const { data: session } = await supabase.auth.getSession();
-      if (!session.session?.user.id) throw new Error("No user found");
+      if (!session.session?.user.id) {
+        console.error('No user found in session');
+        throw new Error("No user found");
+      }
 
       const { data, error } = await supabase
         .from("qr_codes")
         .select("*")
+        .eq('user_id', session.session.user.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('QR codes fetch error:', error);
+        throw error;
+      }
+
+      console.log('QR codes fetched:', data);
       return data.map(qr => ({
         id: qr.id,
         name: qr.name,
@@ -107,14 +129,17 @@ const Index = () => {
   });
 
   if (isLoading || isLoadingProjects || isLoadingQRCodes) {
-    return <div>Loading...</div>;
+    return (
+      <Layout>
+        <div className="p-4">Loading...</div>
+      </Layout>
+    );
   }
 
   const totalScans = qrCodes.reduce((total, qr) => total + (qr.usageCount || 0), 0);
 
   return (
-    <>
-      <TopBar totalScans={totalScans} />
+    <Layout totalScans={totalScans}>
       <div className="p-4">
         <QRCodeList
           qrCodes={qrCodes}
@@ -126,7 +151,7 @@ const Index = () => {
           projects={projects}
         />
       </div>
-    </>
+    </Layout>
   );
 };
 
