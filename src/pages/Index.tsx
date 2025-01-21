@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { QRCodeList } from "@/components/QRCodeList";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TopBar } from "@/components/TopBar";
@@ -10,7 +10,6 @@ const Index = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     console.log('Index component mounted, checking session...');
@@ -66,20 +65,10 @@ const Index = () => {
 
       if (projectsError) throw projectsError;
 
-      const projectsWithScans = await Promise.all(
-        projectsData.map(async (project) => {
-          const { data: totalScans } = await supabase
-            .rpc("get_project_total_scans", { project_id: project.id });
-
-          return {
-            id: project.id,
-            name: project.name,
-            totalScans: totalScans || 0,
-          };
-        })
-      );
-
-      return projectsWithScans;
+      return projectsData.map(project => ({
+        id: project.id,
+        name: project.name,
+      }));
     },
     enabled: isAuthenticated,
   });
@@ -100,7 +89,6 @@ const Index = () => {
         id: qr.id,
         name: qr.name,
         redirectUrl: qr.redirect_url,
-        usageCount: qr.usage_count || 0,
         projectId: qr.project_id
       }));
     },
@@ -111,20 +99,17 @@ const Index = () => {
     return <div>Loading...</div>;
   }
 
-  const totalScans = qrCodes.reduce((total, qr) => total + (qr.usageCount || 0), 0);
-
   return (
     <div className="flex h-screen bg-background">
       <AppSidebar />
       <main className="flex-1 flex flex-col gap-4 pl-4">
-        <TopBar totalScans={totalScans} />
+        <TopBar />
         <div className="px-4">
           <QRCodeList
             qrCodes={qrCodes}
             setQRCodes={(qrs) => {
-              if (Array.isArray(qrs)) {
-                queryClient.setQueryData(["qrCodes"], qrs);
-              }
+              // This is handled by React Query now
+              console.log('QR codes updated:', qrs);
             }}
             projects={projects}
           />

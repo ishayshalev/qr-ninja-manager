@@ -12,7 +12,7 @@ import { QRCodeGrid } from "./qr/QRCodeGrid";
 interface QRCodeListProps {
   qrCodes: QRCode[];
   setQRCodes: React.Dispatch<React.SetStateAction<QRCode[]>>;
-  projects: { id: string; name: string; totalScans: number }[];
+  projects: { id: string; name: string }[];
 }
 
 export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) => {
@@ -58,7 +58,6 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user.id) throw new Error("No user found");
 
-      // First check if a project with this name already exists for this user
       const { data: existingProjects } = await supabase
         .from("projects")
         .select("name")
@@ -69,7 +68,6 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
         throw new Error("A folder with this name already exists");
       }
 
-      console.log("Creating folder with user ID:", session.session.user.id);
       const { data, error } = await supabase
         .from("projects")
         .insert([
@@ -80,10 +78,7 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
         ])
         .select();
       
-      if (error) {
-        console.error("Create folder error:", error);
-        throw error;
-      }
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
@@ -110,7 +105,6 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user.id) throw new Error("No user found");
 
-      console.log("Creating QR code with user ID:", session.session.user.id);
       const { data, error } = await supabase
         .from("qr_codes")
         .insert([
@@ -123,10 +117,7 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
         ])
         .select();
       
-      if (error) {
-        console.error("Create QR code error:", error);
-        throw error;
-      }
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {

@@ -31,21 +31,12 @@ export const ActionBar = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const filteredQRCodes = currentTabValue === "all" 
-    ? qrCodes
-    : currentTabValue === "no-folder"
-      ? qrCodes.filter(qr => !qr.projectId)
-      : qrCodes.filter(qr => qr.projectId === currentTabValue);
-
-  const totalScans = filteredQRCodes.reduce((acc, qr) => acc + (qr.usageCount || 0), 0);
-
   const deleteProjectMutation = useMutation({
     mutationFn: async ({ projectId, deleteQRs }: { projectId: string; deleteQRs: boolean }) => {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user.id) throw new Error("No user found");
 
       if (deleteQRs) {
-        // Delete all QR codes in the project
         const { error: qrError } = await supabase
           .from("qr_codes")
           .delete()
@@ -53,7 +44,6 @@ export const ActionBar = ({
         
         if (qrError) throw qrError;
       } else {
-        // Move QR codes to no folder
         const { error: updateError } = await supabase
           .from("qr_codes")
           .update({ project_id: null })
@@ -62,7 +52,6 @@ export const ActionBar = ({
         if (updateError) throw updateError;
       }
 
-      // Delete the project
       const { error: projectError } = await supabase
         .from("projects")
         .delete()
@@ -102,9 +91,6 @@ export const ActionBar = ({
   return (
     <div className="mb-6 flex justify-between items-center">
       <div className="flex items-center gap-4">
-        <div className="text-sm text-gray-600">
-          Total Scans: {totalScans}
-        </div>
         <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
       </div>
       <div className="flex gap-4">
