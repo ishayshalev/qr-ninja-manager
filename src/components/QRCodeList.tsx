@@ -57,7 +57,6 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user.id) throw new Error("No user found");
 
-      // First check if a project with this name already exists for this user
       const { data: existingProjects } = await supabase
         .from("projects")
         .select("name")

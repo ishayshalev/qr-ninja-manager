@@ -1,12 +1,11 @@
 import { QRCard } from "../QRCard";
-import { QRCode, TimeRange } from "@/types/qr";
+import { QRCode } from "@/types/qr";
 
 interface QRCodeGridProps {
   qrCodes: QRCode[];
   projects: Array<{ id: string; name: string }>;
   currentTabValue: string;
   onProjectChange: (qrId: string, projectId: string | null) => void;
-  timeRange: TimeRange;
 }
 
 export const QRCodeGrid = ({
@@ -14,7 +13,6 @@ export const QRCodeGrid = ({
   projects,
   currentTabValue,
   onProjectChange,
-  timeRange,
 }: QRCodeGridProps) => {
   const filteredQRCodes = currentTabValue === "all" 
     ? qrCodes
@@ -28,7 +26,6 @@ export const QRCodeGrid = ({
           qr={qr}
           projects={projects}
           onProjectChange={onProjectChange}
-          timeRange={timeRange}
         />
       ))}
     </div>
