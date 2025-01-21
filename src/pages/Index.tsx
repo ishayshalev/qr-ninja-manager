@@ -87,7 +87,7 @@ const Index = () => {
       return projectsData.map(project => ({
         id: project.id,
         name: project.name,
-        totalScans: 0, // Removed scan functionality
+        totalScans: 0,
       }));
     },
     enabled: isAuthenticated,
@@ -131,7 +131,8 @@ const Index = () => {
         id: qr.id,
         name: qr.name,
         redirectUrl: qr.redirect_url,
-        projectId: qr.project_id
+        projectId: qr.project_id,
+        usageCount: qr.usage_count || 0  // Add usageCount property with fallback to 0
       }));
     },
     enabled: isAuthenticated,
