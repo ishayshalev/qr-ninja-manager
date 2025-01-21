@@ -83,12 +83,7 @@ const Index = () => {
       }
 
       console.log('Projects fetched:', projectsData);
-
-      return projectsData.map(project => ({
-        id: project.id,
-        name: project.name,
-        description: project.description
-      }));
+      return projectsData;
     },
     enabled: isAuthenticated,
     retry: false,
