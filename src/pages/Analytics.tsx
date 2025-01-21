@@ -4,39 +4,77 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TimeRangeSelector } from "@/components/TimeRangeSelector";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TimeRange } from "@/types/qr";
+import { useNavigate } from "react-router-dom";
 
 export default function Analytics() {
   const [timeRange, setTimeRange] = useState<TimeRange>("monthly");
+  const navigate = useNavigate();
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log('No session found, redirecting to auth');
+        navigate("/auth");
+      }
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        navigate("/auth");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const { data: scanData, isLoading } = useQuery({
     queryKey: ['qr-scans', timeRange],
     queryFn: async () => {
       console.log('Fetching scan data for timeRange:', timeRange);
       const { data: session } = await supabase.auth.getSession();
-      if (!session.session?.user.id) throw new Error("No user found");
+      if (!session.session?.user.id) {
+        console.error('No user found in session');
+        throw new Error("No user found");
+      }
 
       const { data: qrCodes, error: qrError } = await supabase
         .from('qr_codes')
         .select('id, name')
         .eq('user_id', session.session.user.id);
 
-      if (qrError) throw qrError;
+      if (qrError) {
+        console.error('Error fetching QR codes:', qrError);
+        throw qrError;
+      }
 
-      const qrIds = qrCodes?.map(qr => qr.id) || [];
+      if (!qrCodes || qrCodes.length === 0) {
+        console.log('No QR codes found for user');
+        return [];
+      }
+
+      const qrIds = qrCodes.map(qr => qr.id);
       
-      // Get scans for the selected time range
       const { data: scans, error: scansError } = await supabase
         .from('qr_scans')
         .select('*, qr_codes(name)')
         .in('qr_code_id', qrIds)
         .order('created_at', { ascending: false });
 
-      if (scansError) throw scansError;
+      if (scansError) {
+        console.error('Error fetching scans:', scansError);
+        throw scansError;
+      }
+
       console.log('Fetched scan data:', scans);
-      return scans;
-    }
+      return scans || [];
+    },
+    enabled: true // The query will run automatically
   });
 
   const { data: deviceStats } = useQuery({
@@ -77,7 +115,7 @@ export default function Analytics() {
   }
 
   return (
-    <div className="container mx-auto p-8">
+    <div className="w-full">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">QR Analytics</h1>
         <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
