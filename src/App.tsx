@@ -4,9 +4,9 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
 import { Toaster } from "@/components/ui/toaster";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import "./App.css";
 
-// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -20,13 +20,15 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="*" element={<Navigate to="/auth" replace />} />
-        </Routes>
-        <Toaster />
+        <SidebarProvider defaultOpen={true}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<Navigate to="/auth" replace />} />
+          </Routes>
+          <Toaster />
+        </SidebarProvider>
       </Router>
     </QueryClientProvider>
   );
