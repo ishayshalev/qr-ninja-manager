@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { QRCodeList } from "@/components/QRCodeList";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { AppSidebar } from "@/components/AppSidebar";
 import { TopBar } from "@/components/TopBar";
 
 const Index = () => {
@@ -114,23 +113,20 @@ const Index = () => {
   const totalScans = qrCodes.reduce((total, qr) => total + (qr.usageCount || 0), 0);
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <AppSidebar />
-      <div className="flex-1">
-        <TopBar totalScans={totalScans} />
-        <div className="p-4">
-          <QRCodeList
-            qrCodes={qrCodes}
-            setQRCodes={(qrs) => {
-              if (Array.isArray(qrs)) {
-                queryClient.setQueryData(["qrCodes"], qrs);
-              }
-            }}
-            projects={projects}
-          />
-        </div>
+    <>
+      <TopBar totalScans={totalScans} />
+      <div className="p-4">
+        <QRCodeList
+          qrCodes={qrCodes}
+          setQRCodes={(qrs) => {
+            if (Array.isArray(qrs)) {
+              queryClient.setQueryData(["qrCodes"], qrs);
+            }
+          }}
+          projects={projects}
+        />
       </div>
-    </div>
+    </>
   );
 };
 
