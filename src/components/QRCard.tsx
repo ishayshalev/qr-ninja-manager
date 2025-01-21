@@ -1,4 +1,4 @@
-import { QRCode } from "@/types/qr";
+import { QRCode, TimeRange } from "@/types/qr";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Link, Trash2, BarChart2 } from "lucide-react";
@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { TimeRange } from "@/types/qr";
 import { startOfDay, subDays, subMonths, subWeeks, subYears } from "date-fns";
 
 interface QRCardProps {
@@ -18,11 +17,10 @@ interface QRCardProps {
   timeRange: TimeRange;
 }
 
-export const QRCard = ({ qr, projects, onProjectChange, timeRange }: QRCardProps) => {
+export const QRCard = ({ qr, projects, onProjectChange, timeRange = "all" }: QRCardProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Calculate date range based on selected time range
   const getDateRange = () => {
     const endDate = new Date();
     let startDate = startOfDay(new Date());
@@ -52,6 +50,7 @@ export const QRCard = ({ qr, projects, onProjectChange, timeRange }: QRCardProps
   const { data: scansInRange = 0 } = useQuery({
     queryKey: ["qrScans", qr.id, timeRange],
     queryFn: async () => {
+      console.log("Fetching scans for QR code:", qr.id, "with time range:", timeRange);
       const { startDate, endDate } = getDateRange();
       const { data, error } = await supabase
         .rpc("get_qr_scans_in_range", {
@@ -65,6 +64,7 @@ export const QRCard = ({ qr, projects, onProjectChange, timeRange }: QRCardProps
         throw error;
       }
 
+      console.log("Scans data:", data);
       return data || 0;
     },
   });
@@ -126,10 +126,14 @@ export const QRCard = ({ qr, projects, onProjectChange, timeRange }: QRCardProps
           <CardTitle className="text-lg font-semibold">{qr.name}</CardTitle>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <BarChart2 className="h-4 w-4" />
-            <span>{scansInRange} scans {timeRange !== "all" ? `this ${timeRange.slice(0, -2)}` : "total"}</span>
+            <span>
+              {scansInRange} scans{" "}
+              {timeRange && timeRange !== "all" ? `this ${timeRange.replace(/ly$/, "")}` : "total"}
+            </span>
           </div>
         </div>
       </CardHeader>
+      
       <CardContent>
         <div className="flex justify-center mb-4">
           <QRCodeCanvas
