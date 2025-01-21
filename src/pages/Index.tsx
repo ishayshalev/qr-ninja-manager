@@ -131,8 +131,7 @@ const Index = () => {
         id: qr.id,
         name: qr.name,
         redirectUrl: qr.redirect_url,
-        projectId: qr.project_id,
-        usageCount: qr.usage_count || 0  // Add usageCount property with fallback to 0
+        projectId: qr.project_id
       }));
     },
     enabled: isAuthenticated,
