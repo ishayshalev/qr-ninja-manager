@@ -2,6 +2,7 @@ export interface QRCode {
   id: string;
   name: string;
   redirectUrl: string;
+  usageCount: number;
   projectId: string | null;
 }
 

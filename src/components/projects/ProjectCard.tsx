@@ -1,11 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { BarChart2, Trash2 } from "lucide-react";
 
 interface ProjectCardProps {
   id: string;
   name: string;
   description: string | null;
+  totalScans: number;
   selectedProjectId: string | null;
   onProjectSelect: (projectId: string) => void;
   onDeleteProject: (projectId: string) => void;
@@ -18,6 +19,7 @@ export const ProjectCard = ({
   id,
   name,
   description,
+  totalScans,
   selectedProjectId,
   onProjectSelect,
   onDeleteProject,
@@ -54,6 +56,10 @@ export const ProjectCard = ({
         {description && (
           <p className="text-sm text-gray-600 mb-2">{description}</p>
         )}
+        <div className="flex items-center text-sm text-gray-600">
+          <BarChart2 className="h-4 w-4 mr-2" />
+          <span>{totalScans} total scans</span>
+        </div>
       </CardContent>
     </Card>
   );

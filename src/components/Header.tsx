@@ -20,8 +20,8 @@ export const Header = () => {
   };
 
   return (
-    <div className="w-full border-b">
-      <div className="w-full flex justify-between items-center py-4 px-6">
+    <div className="border-b">
+      <div className="container mx-auto flex justify-between items-center py-4">
         <h1 className="text-2xl font-bold">QR Code Manager</h1>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

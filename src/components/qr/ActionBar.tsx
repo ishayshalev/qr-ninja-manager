@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { QRCode } from "@/types/qr";
+import { TimeRange, QRCode } from "@/types/qr";
+import { TimeRangeSelector } from "../TimeRangeSelector";
 import { QRExportOptions } from "../QRExportOptions";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
@@ -11,13 +12,17 @@ import { supabase } from "@/integrations/supabase/client";
 interface ActionBarProps {
   qrCodes: QRCode[];
   projects: Array<{ id: string; name: string }>;
-  currentTabValue: string;
+  timeRange: TimeRange;
+  setTimeRange: (range: TimeRange) => void;
   setIsCreateQROpen: (open: boolean) => void;
+  currentTabValue: string;
 }
 
 export const ActionBar = ({
   qrCodes,
   projects,
+  timeRange,
+  setTimeRange,
   setIsCreateQROpen,
   currentTabValue,
 }: ActionBarProps) => {
@@ -32,12 +37,15 @@ export const ActionBar = ({
       ? qrCodes.filter(qr => !qr.projectId)
       : qrCodes.filter(qr => qr.projectId === currentTabValue);
 
+  const totalScans = filteredQRCodes.reduce((acc, qr) => acc + (qr.usageCount || 0), 0);
+
   const deleteProjectMutation = useMutation({
     mutationFn: async ({ projectId, deleteQRs }: { projectId: string; deleteQRs: boolean }) => {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user.id) throw new Error("No user found");
 
       if (deleteQRs) {
+        // Delete all QR codes in the project
         const { error: qrError } = await supabase
           .from("qr_codes")
           .delete()
@@ -45,6 +53,7 @@ export const ActionBar = ({
         
         if (qrError) throw qrError;
       } else {
+        // Move QR codes to no folder
         const { error: updateError } = await supabase
           .from("qr_codes")
           .update({ project_id: null })
@@ -53,6 +62,7 @@ export const ActionBar = ({
         if (updateError) throw updateError;
       }
 
+      // Delete the project
       const { error: projectError } = await supabase
         .from("projects")
         .delete()
@@ -91,7 +101,12 @@ export const ActionBar = ({
 
   return (
     <div className="mb-6 flex justify-between items-center">
-      <div className="flex items-center gap-4" />
+      <div className="flex items-center gap-4">
+        <div className="text-sm text-gray-600">
+          Total Scans: {totalScans}
+        </div>
+        <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
+      </div>
       <div className="flex gap-4">
         {currentTabValue !== "all" && currentTabValue !== "no-folder" && (
           <>

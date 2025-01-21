@@ -1,7 +1,7 @@
-import { QRCode } from "@/types/qr";
+import { QRCode, TimeRange } from "@/types/qr";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Link, Trash2 } from "lucide-react";
+import { Download, Link, Trash2, BarChart2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -14,9 +14,10 @@ interface QRCardProps {
   qr: QRCode;
   projects: { id: string; name: string }[];
   onProjectChange: (qrId: string, projectId: string | null) => void;
+  timeRange: TimeRange;
 }
 
-export const QRCard = ({ qr, projects, onProjectChange }: QRCardProps) => {
+export const QRCard = ({ qr, projects, onProjectChange, timeRange }: QRCardProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -70,7 +71,16 @@ export const QRCard = ({ qr, projects, onProjectChange }: QRCardProps) => {
   return (
     <Card key={qr.id} className="overflow-hidden">
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold">{qr.name}</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-lg font-semibold">{qr.name}</CardTitle>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <BarChart2 className="h-4 w-4" />
+            <span>
+              {qr.usageCount} scans{" "}
+              {timeRange && timeRange !== "all" ? `this ${timeRange.replace(/ly$/, "")}` : "total"}
+            </span>
+          </div>
+        </div>
       </CardHeader>
       
       <CardContent>

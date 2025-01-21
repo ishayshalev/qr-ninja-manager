@@ -1,10 +1,15 @@
-import { Home, Settings, CreditCard } from "lucide-react";
+import { Home, BarChart2, Settings, CreditCard } from "lucide-react";
 
 export const sidebarMenuItems = [
   {
     title: "Overview",
     icon: Home,
     path: "/",
+  },
+  {
+    title: "QR Analytics",
+    icon: BarChart2,
+    path: "/analytics",
   },
   {
     title: "Settings",

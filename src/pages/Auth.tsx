@@ -10,6 +10,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   
+  // Update redirect URL based on environment
   const redirectUrl = window.location.hostname === 'app.qrmanager.co'
     ? 'https://app.qrmanager.co'
     : window.location.origin;
@@ -80,8 +81,8 @@ const Auth = () => {
   }, [navigate, redirectUrl]);
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md mx-auto">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Welcome to QR Manager</CardTitle>
         </CardHeader>
