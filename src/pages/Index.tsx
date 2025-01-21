@@ -114,11 +114,11 @@ const Index = () => {
   const totalScans = qrCodes.reduce((total, qr) => total + (qr.usageCount || 0), 0);
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-screen bg-background">
       <AppSidebar />
-      <div className="flex-1">
+      <main className="flex-1 flex flex-col gap-4 pl-4">
         <TopBar totalScans={totalScans} />
-        <div className="p-4">
+        <div className="px-4">
           <QRCodeList
             qrCodes={qrCodes}
             setQRCodes={(qrs) => {
@@ -129,7 +129,7 @@ const Index = () => {
             projects={projects}
           />
         </div>
-      </div>
+      </main>
     </div>
   );
 };
