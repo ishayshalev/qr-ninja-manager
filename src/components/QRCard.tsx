@@ -6,18 +6,68 @@ import { QRCodeCanvas } from "qrcode.react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { TimeRange } from "@/types/qr";
+import { startOfDay, subDays, subMonths, subWeeks, subYears } from "date-fns";
 
 interface QRCardProps {
   qr: QRCode;
   projects: { id: string; name: string }[];
   onProjectChange: (qrId: string, projectId: string | null) => void;
+  timeRange: TimeRange;
 }
 
-export const QRCard = ({ qr, projects, onProjectChange }: QRCardProps) => {
+export const QRCard = ({ qr, projects, onProjectChange, timeRange }: QRCardProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Calculate date range based on selected time range
+  const getDateRange = () => {
+    const endDate = new Date();
+    let startDate = startOfDay(new Date());
+
+    switch (timeRange) {
+      case "daily":
+        startDate = subDays(endDate, 1);
+        break;
+      case "weekly":
+        startDate = subWeeks(endDate, 1);
+        break;
+      case "monthly":
+        startDate = subMonths(endDate, 1);
+        break;
+      case "yearly":
+        startDate = subYears(endDate, 1);
+        break;
+      case "all":
+        startDate = new Date(0); // Beginning of time
+        break;
+    }
+
+    return { startDate, endDate };
+  };
+
+  // Query to get scans within the selected time range
+  const { data: scansInRange = 0 } = useQuery({
+    queryKey: ["qrScans", qr.id, timeRange],
+    queryFn: async () => {
+      const { startDate, endDate } = getDateRange();
+      const { data, error } = await supabase
+        .rpc("get_qr_scans_in_range", {
+          qr_id: qr.id,
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
+        });
+
+      if (error) {
+        console.error("Error fetching scans:", error);
+        throw error;
+      }
+
+      return data || 0;
+    },
+  });
 
   const deleteQRMutation = useMutation({
     mutationFn: async (qrId: string) => {
@@ -76,7 +126,7 @@ export const QRCard = ({ qr, projects, onProjectChange }: QRCardProps) => {
           <CardTitle className="text-lg font-semibold">{qr.name}</CardTitle>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <BarChart2 className="h-4 w-4" />
-            <span>{qr.usageCount || 0} scans</span>
+            <span>{scansInRange} scans {timeRange !== "all" ? `this ${timeRange.slice(0, -2)}` : "total"}</span>
           </div>
         </div>
       </CardHeader>
