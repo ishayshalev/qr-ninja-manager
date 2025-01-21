@@ -101,13 +101,15 @@ const Index = () => {
     },
     enabled: isAuthenticated,
     retry: 3,
-    onError: (error) => {
-      console.error('Projects query error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load projects. Please try refreshing the page.",
-        variant: "destructive",
-      });
+    meta: {
+      onError: () => {
+        console.error('Projects query error:', projectsError);
+        toast({
+          title: "Error",
+          description: "Failed to load projects. Please try refreshing the page.",
+          variant: "destructive",
+        });
+      }
     }
   });
 
@@ -143,13 +145,15 @@ const Index = () => {
     },
     enabled: isAuthenticated,
     retry: 3,
-    onError: (error) => {
-      console.error('QR codes query error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load QR codes. Please try refreshing the page.",
-        variant: "destructive",
-      });
+    meta: {
+      onError: () => {
+        console.error('QR codes query error:', qrCodesError);
+        toast({
+          title: "Error",
+          description: "Failed to load QR codes. Please try refreshing the page.",
+          variant: "destructive",
+        });
+      }
     }
   });
 
