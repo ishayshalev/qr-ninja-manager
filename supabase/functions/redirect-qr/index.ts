@@ -29,7 +29,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Get QR code details
+    // Get QR code details first
     const { data: qrCode, error: qrError } = await supabase
       .from('qr_codes')
       .select('redirect_url')
@@ -44,7 +44,7 @@ serve(async (req) => {
       )
     }
 
-    // Parse user agent
+    // Prepare scan data
     const userAgent = req.headers.get('user-agent') || ''
     const browser = getBrowser(userAgent)
     const os = getOS(userAgent)
@@ -52,35 +52,38 @@ serve(async (req) => {
     const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0] || req.headers.get('x-real-ip')
     const referrer = req.headers.get('referer')
 
-    // Get geolocation data
-    const geoData = await getGeoData(ipAddress || '')
+    // Log scan data asynchronously
+    Promise.all([
+      getGeoData(ipAddress || '').then(geoData => {
+        return supabase
+          .from('qr_scans')
+          .insert([{
+            qr_code_id: qrId,
+            ip_address: ipAddress,
+            user_agent: userAgent,
+            browser,
+            os,
+            device_type: deviceType,
+            country: geoData.country,
+            city: geoData.city,
+            referrer,
+          }])
+          .then(({ error }) => {
+            if (error) console.error('Error logging scan:', error)
+          })
+      }),
+      supabase
+        .from('qr_codes')
+        .update({ usage_count: supabase.rpc('increment_counter', { row_id: qrId }) })
+        .eq('id', qrId)
+        .then(({ error }) => {
+          if (error) console.error('Error updating usage count:', error)
+        })
+    ]).catch(error => {
+      console.error('Error in background operations:', error)
+    })
 
-    // Log the scan
-    const { error: scanError } = await supabase
-      .from('qr_scans')
-      .insert([{
-        qr_code_id: qrId,
-        ip_address: ipAddress,
-        user_agent: userAgent,
-        browser,
-        os,
-        device_type: deviceType,
-        country: geoData.country,
-        city: geoData.city,
-        referrer,
-      }])
-
-    if (scanError) {
-      console.error('Error logging scan:', scanError)
-    }
-
-    // Increment usage count
-    await supabase
-      .from('qr_codes')
-      .update({ usage_count: supabase.rpc('increment_counter', { row_id: qrId }) })
-      .eq('id', qrId)
-
-    // Redirect to the target URL
+    // Redirect immediately without waiting for logging operations
     return new Response(null, {
       status: 302,
       headers: {
