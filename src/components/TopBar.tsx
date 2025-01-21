@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "react-router-dom";
 
 interface TopBarProps {
-  totalScans: number;
+  totalScans?: number;
 }
 
 export function TopBar({ totalScans }: TopBarProps) {
@@ -34,10 +34,12 @@ export function TopBar({ totalScans }: TopBarProps) {
     <div className="flex items-center justify-between border-b bg-background p-4">
       <h1 className="text-2xl font-semibold">{getPageTitle()}</h1>
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2">
-          <BarChart2 className="h-4 w-4" />
-          <span className="font-medium">{totalScans} total scans</span>
-        </div>
+        {totalScans !== undefined && (
+          <div className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2">
+            <BarChart2 className="h-4 w-4" />
+            <span className="font-medium">{totalScans} total scans</span>
+          </div>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
