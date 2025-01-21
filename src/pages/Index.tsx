@@ -118,7 +118,7 @@ const Index = () => {
       <AppSidebar />
       <div className="flex-1">
         <TopBar totalScans={totalScans} />
-        <div className="p-4 md:p-8">
+        <div className="p-4">
           <QRCodeList
             qrCodes={qrCodes}
             setQRCodes={(qrs) => {
