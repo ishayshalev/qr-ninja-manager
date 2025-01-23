@@ -11,9 +11,7 @@ const Auth = () => {
   const [error, setError] = useState<string | null>(null);
   
   // Update redirect URL based on environment
-  const redirectUrl = window.location.hostname === 'app.qrmanager.co'
-    ? 'https://app.qrmanager.co'
-    : window.location.origin;
+  const redirectUrl = `${window.location.origin}${window.location.pathname}`;
 
   useEffect(() => {
     console.log('Auth component mounted, checking session...');
