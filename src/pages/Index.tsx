@@ -102,9 +102,9 @@ const Index = () => {
   return (
     <div className="flex h-screen bg-background">
       <AppSidebar />
-      <main className="flex-1 flex flex-col gap-4 pl-4">
+      <main className="flex-1">
         <TopBar />
-        <div className="px-4">
+        <div className="container p-4">
           <QRCodeList
             qrCodes={qrCodes}
             setQRCodes={(qrs) => {
