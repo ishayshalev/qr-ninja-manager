@@ -79,7 +79,7 @@ const Auth = () => {
   }, [navigate, redirectUrl]);
 
   return (
-    <div className="container min-h-screen flex items-center justify-center bg-gray-50 px-8 md:px-0">
+    <div className="container min-h-screen flex items-center justify-center bg-gray-50 px-6 md:px-0">
       <Card className="w-full max-w-xl">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Welcome to QR Manager</CardTitle>
