@@ -4,10 +4,9 @@ import { Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { QRExportOptions } from "../QRExportOptions";
-import { QRCode } from "@/types/qr";
 
 interface TabsHeaderProps {
-  qrCodes: QRCode[];
+  qrCodes: Array<{ projectId: string | null }>;
   projects: Array<{ id: string; name: string }>;
   isCreateFolderOpen: boolean;
   setIsCreateFolderOpen: (open: boolean) => void;

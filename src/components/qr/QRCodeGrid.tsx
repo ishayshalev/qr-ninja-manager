@@ -23,10 +23,9 @@ export const QRCodeGrid = ({
       {filteredQRCodes.map((qr) => (
         <QRCard
           key={qr.id}
-          qr={qr}
+          qrCode={qr}
           projects={projects}
           onProjectChange={onProjectChange}
-          timeRange="all"
         />
       ))}
     </div>
