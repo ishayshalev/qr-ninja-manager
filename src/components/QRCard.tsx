@@ -1,4 +1,4 @@
-import { QRCode } from "@/types/qr";
+import { QRCode, TimeRange } from "@/types/qr";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Link, Trash2 } from "lucide-react";
@@ -14,9 +14,10 @@ interface QRCardProps {
   qr: QRCode;
   projects: { id: string; name: string }[];
   onProjectChange: (qrId: string, projectId: string | null) => void;
+  timeRange: TimeRange;
 }
 
-export const QRCard = ({ qr, projects, onProjectChange }: QRCardProps) => {
+export const QRCard = ({ qr, projects, onProjectChange, timeRange }: QRCardProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();

@@ -5,7 +5,6 @@ import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
 import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { SubscriptionRequired } from "@/components/SubscriptionRequired";
 import "./App.css";
 
 const queryClient = new QueryClient({
@@ -23,23 +22,9 @@ function App() {
       <Router>
         <SidebarProvider defaultOpen={true}>
           <Routes>
+            <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route
-              path="/"
-              element={
-                <SubscriptionRequired>
-                  <Index />
-                </SubscriptionRequired>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <SubscriptionRequired>
-                  <Settings />
-                </SubscriptionRequired>
-              }
-            />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/auth" replace />} />
           </Routes>
           <Toaster />
