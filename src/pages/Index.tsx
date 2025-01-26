@@ -100,7 +100,7 @@ const Index = () => {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background w-full">
       <AppSidebar />
       <main className="flex-1 flex flex-col">
         <div className="sticky top-0 z-10 bg-background">
