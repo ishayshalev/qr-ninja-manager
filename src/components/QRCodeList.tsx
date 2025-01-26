@@ -1,4 +1,4 @@
-import { QRCode, TimeRange } from "@/types/qr";
+import { QRCode } from "@/types/qr";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -21,7 +21,6 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [isCreateQROpen, setIsCreateQROpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  const [timeRange, setTimeRange] = useState<TimeRange>("all");
 
   const updateProjectMutation = useMutation({
     mutationFn: async ({ qrId, projectId }: { qrId: string; projectId: string | null }) => {
@@ -170,8 +169,6 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
             <ActionBar
               qrCodes={qrCodes}
               projects={projects}
-              timeRange={timeRange}
-              setTimeRange={setTimeRange}
               setIsCreateQROpen={setIsCreateQROpen}
               currentTabValue={tabValue}
             />
@@ -180,7 +177,6 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
               projects={projects}
               currentTabValue={tabValue}
               onProjectChange={handleProjectChange}
-              timeRange={timeRange}
             />
           </TabsContent>
         ))}
