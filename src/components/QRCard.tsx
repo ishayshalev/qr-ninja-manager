@@ -49,21 +49,23 @@ export const QRCard = ({ qr, projects, onProjectChange, timeRange }: QRCardProps
   });
 
   const downloadQRCode = () => {
-    const canvas = document.getElementById(qr.id) as HTMLCanvasElement;
-    if (canvas) {
-      const pngUrl = canvas
-        .toDataURL("image/png")
-        .replace("image/png", "image/octet-stream");
+    const element = document.getElementById(`${qr.id}-svg`);
+    if (element instanceof SVGElement) {
+      const svgData = new XMLSerializer().serializeToString(element);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml' });
+      const downloadUrl = URL.createObjectURL(svgBlob);
+      
       const downloadLink = document.createElement("a");
-      downloadLink.href = pngUrl;
-      downloadLink.download = `${qr.name}-qr.png`;
+      downloadLink.href = downloadUrl;
+      downloadLink.download = `${qr.name}-qr.svg`;
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(downloadUrl);
       
       toast({
         title: "QR Code Downloaded",
-        description: "Your QR code has been downloaded successfully.",
+        description: "Your QR code has been downloaded as SVG successfully.",
       });
     }
   };
@@ -124,7 +126,7 @@ export const QRCard = ({ qr, projects, onProjectChange, timeRange }: QRCardProps
             onClick={downloadQRCode}
           >
             <Download className="h-4 w-4 mr-2" />
-            Download PNG
+            Download SVG
           </Button>
         </div>
       </CardContent>
