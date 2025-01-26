@@ -177,7 +177,6 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
               projects={projects}
               currentTabValue={tabValue}
               onProjectChange={handleProjectChange}
-              timeRange="all"
             />
           </TabsContent>
         ))}

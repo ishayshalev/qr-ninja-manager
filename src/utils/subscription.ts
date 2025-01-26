@@ -7,13 +7,18 @@ export const checkSubscriptionStatus = async (): Promise<SubscriptionStatus> => 
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return null;
 
-    const { data: subscription } = await supabase
+    const { data: subscription, error } = await supabase
       .from("subscriptions")
       .select("status")
       .eq("user_id", session.user.id)
-      .single();
+      .maybeSingle();
 
-    return subscription?.status || null;
+    if (error) {
+      console.error("Error checking subscription:", error);
+      return null;
+    }
+
+    return subscription?.status as SubscriptionStatus || null;
   } catch (error) {
     console.error("Error checking subscription status:", error);
     return null;
@@ -25,20 +30,16 @@ export const createCheckoutSession = async (priceId: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error("No session found");
 
-    const response = await fetch("/api/create-checkout", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const { data, error } = await supabase.functions.invoke('create-checkout', {
+      body: {
         priceId,
         userId: session.user.id,
         email: session.user.email,
-      }),
+      },
     });
 
-    const data = await response.json();
-    if (data.url) {
+    if (error) throw error;
+    if (data?.url) {
       window.location.href = data.url;
     }
   } catch (error) {
