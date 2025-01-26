@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { checkSubscriptionStatus, SubscriptionStatus } from "@/utils/subscription";
+import { checkSubscriptionStatus, SubscriptionStatus, createCheckoutSession } from "@/utils/subscription";
 import {
   AlertDialog,
   AlertDialogContent,
