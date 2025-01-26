@@ -157,6 +157,41 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          lemon_squeezy_customer_id: string | null;
+          lemon_squeezy_subscription_id: string | null;
+          status: "active" | "past_due" | "unpaid" | "cancelled" | "expired";
+          plan_id: string | null;
+          current_period_end: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          lemon_squeezy_customer_id?: string | null;
+          lemon_squeezy_subscription_id?: string | null;
+          status: "active" | "past_due" | "unpaid" | "cancelled" | "expired";
+          plan_id?: string | null;
+          current_period_end?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          lemon_squeezy_customer_id?: string | null;
+          lemon_squeezy_subscription_id?: string | null;
+          status?: "active" | "past_due" | "unpaid" | "cancelled" | "expired";
+          plan_id?: string | null;
+          current_period_end?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+      };
     }
     Views: {
       [_ in never]: never
@@ -195,7 +230,7 @@ export type Tables<
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
         Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
       Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
@@ -207,10 +242,10 @@ export type Tables<
         PublicSchema["Views"])
     ? (PublicSchema["Tables"] &
         PublicSchema["Views"])[PublicTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
+      Row: infer R
+    }
+    ? R
+    : never
     : never
 
 export type TablesInsert<
