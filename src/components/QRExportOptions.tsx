@@ -12,28 +12,36 @@ interface QRExportOptionsProps {
 export const QRExportOptions = ({ qrCodes, projects, currentProjectId }: QRExportOptionsProps) => {
   const { toast } = useToast();
 
-  const exportQRCodesAsZip = async (qrCodesToExport: QRCode[]) => {
+  const exportQRCodesAsZip = async (qrCodesToExport: QRCode[], format: 'png' | 'svg') => {
     const zip = new JSZip();
     
     for (const qr of qrCodesToExport) {
-      const canvas = document.getElementById(qr.id) as HTMLCanvasElement;
-      if (canvas) {
-        const pngData = canvas.toDataURL("image/png").split(',')[1];
-        zip.file(`${qr.name}-qr.png`, pngData, { base64: true });
+      if (format === 'png') {
+        const canvas = document.getElementById(qr.id) as HTMLCanvasElement;
+        if (canvas) {
+          const pngData = canvas.toDataURL("image/png").split(',')[1];
+          zip.file(`${qr.name}-qr.png`, pngData, { base64: true });
+        }
+      } else {
+        const svgElement = document.getElementById(`${qr.id}-svg`) as SVGElement;
+        if (svgElement) {
+          const svgData = new XMLSerializer().serializeToString(svgElement);
+          zip.file(`${qr.name}-qr.svg`, svgData);
+        }
       }
     }
     
     const blob = await zip.generateAsync({ type: "blob" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "qr-codes.zip";
+    link.download = `qr-codes-${format}.zip`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
     toast({
       title: "QR Codes Downloaded",
-      description: "Your QR codes have been downloaded as a ZIP file.",
+      description: `Your QR codes have been downloaded as a ZIP file (${format.toUpperCase()}).`,
     });
   };
 
@@ -62,26 +70,33 @@ export const QRExportOptions = ({ qrCodes, projects, currentProjectId }: QRExpor
     });
   };
 
-  const handleExport = (type: 'csv' | 'zip') => {
+  const handleExport = (type: 'csv' | 'png-zip' | 'svg-zip') => {
     const qrCodesToExport = currentProjectId 
       ? qrCodes.filter(qr => qr.projectId === currentProjectId)
       : qrCodes;
 
-    if (type === 'csv') {
-      exportQRCodesAsCSV(currentProjectId);
-    } else {
-      exportQRCodesAsZip(qrCodesToExport);
+    switch (type) {
+      case 'csv':
+        exportQRCodesAsCSV(currentProjectId);
+        break;
+      case 'png-zip':
+        exportQRCodesAsZip(qrCodesToExport, 'png');
+        break;
+      case 'svg-zip':
+        exportQRCodesAsZip(qrCodesToExport, 'svg');
+        break;
     }
   };
 
   return (
-    <Select onValueChange={(value) => handleExport(value as 'csv' | 'zip')}>
+    <Select onValueChange={handleExport}>
       <SelectTrigger>
         <SelectValue placeholder="Export QR Codes" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="csv">Export as CSV</SelectItem>
-        <SelectItem value="zip">Export as ZIP (PNG files)</SelectItem>
+        <SelectItem value="png-zip">Export as ZIP (PNG files)</SelectItem>
+        <SelectItem value="svg-zip">Export as ZIP (SVG files)</SelectItem>
       </SelectContent>
     </Select>
   );
