@@ -107,7 +107,7 @@ const Index = () => {
           <TopBar />
         </div>
         <div className="flex-1 overflow-auto">
-          <div className="container p-4">
+          <div className="container p-4 justify-start">
             <QRCodeList
               qrCodes={qrCodes}
               setQRCodes={(qrs) => {
