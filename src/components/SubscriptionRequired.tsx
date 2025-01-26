@@ -45,7 +45,7 @@ export const SubscriptionRequired = ({ children }: { children: React.ReactNode }
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction asChild>
-              <Button onClick={() => createCheckoutSession("price_xxx")}>
+              <Button onClick={() => createCheckoutSession("price_01hqp9kj3nkr8yjz6xmwpkfp4t")}>
                 Upgrade Now
               </Button>
             </AlertDialogAction>
