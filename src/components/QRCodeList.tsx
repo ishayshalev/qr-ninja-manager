@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { CreateQRDialog } from "./CreateQRDialog";
 import { TabsHeader } from "./qr/TabsHeader";
+import { ActionBar } from "./qr/ActionBar";
 import { QRCodeGrid } from "./qr/QRCodeGrid";
 
 interface QRCodeListProps {
@@ -161,12 +162,16 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
           newFolderName={newFolderName}
           setNewFolderName={setNewFolderName}
           onCreateFolder={() => createFolderMutation.mutate()}
-          setIsCreateQROpen={setIsCreateQROpen}
-          currentTabValue="all"
         />
 
         {["all", ...projects.map(p => p.id)].map((tabValue) => (
           <TabsContent key={tabValue} value={tabValue}>
+            <ActionBar
+              qrCodes={qrCodes}
+              projects={projects}
+              setIsCreateQROpen={setIsCreateQROpen}
+              currentTabValue={tabValue}
+            />
             <QRCodeGrid
               qrCodes={qrCodes}
               projects={projects}
