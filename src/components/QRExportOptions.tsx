@@ -23,9 +23,9 @@ export const QRExportOptions = ({ qrCodes, projects, currentProjectId }: QRExpor
           zip.file(`${qr.name}-qr.png`, pngData, { base64: true });
         }
       } else {
-        const svgElement = document.getElementById(`${qr.id}-svg`) as SVGElement;
-        if (svgElement) {
-          const svgData = new XMLSerializer().serializeToString(svgElement);
+        const element = document.getElementById(`${qr.id}-svg`);
+        if (element instanceof SVGElement) {
+          const svgData = new XMLSerializer().serializeToString(element);
           zip.file(`${qr.name}-qr.svg`, svgData);
         }
       }
