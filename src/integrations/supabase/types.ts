@@ -56,40 +56,8 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
-      }
-      subscriptions: {
-        Row: {
-          id: string;
-          user_id: string;
-          status: string;
-          created_at: string | null;
-          updated_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          status: string;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          status?: string;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "subscriptions_user_id_fkey";
-            columns: ["user_id"];
-            isOneToOne: false;
-            referencedRelation: "profiles";
-            referencedColumns: ["id"];
-          }
-        ];
       }
       qr_codes: {
         Row: {
@@ -189,6 +157,38 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          created_at: string | null
+          id: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          status: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -281,10 +281,10 @@ export type TablesUpdate<
     : never
   : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
     ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-      Update: infer U
-    }
-    ? U
-    : never
+        Update: infer U
+      }
+      ? U
+      : never
     : never
 
 export type Enums<
