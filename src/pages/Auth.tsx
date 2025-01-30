@@ -16,17 +16,25 @@ const Auth = () => {
 
   const createTrialSubscription = async (userId: string) => {
     try {
-      const { data: existingSubscription } = await supabase
+      console.log('Checking for existing subscription for user:', userId);
+      
+      const { data: existingSubscription, error: fetchError } = await supabase
         .from('subscriptions')
         .select('*')
         .eq('user_id', userId)
         .single();
+
+      if (fetchError) {
+        console.error('Error checking existing subscription:', fetchError);
+        throw fetchError;
+      }
 
       if (existingSubscription) {
         console.log('User already has a subscription:', existingSubscription);
         return;
       }
 
+      console.log('Creating new trial subscription for user:', userId);
       const trialEndDate = new Date();
       trialEndDate.setDate(trialEndDate.getDate() + 7); // 7-day trial
 
@@ -40,14 +48,18 @@ const Auth = () => {
           }
         ]);
 
-      if (subscriptionError) throw subscriptionError;
+      if (subscriptionError) {
+        console.error('Error creating trial subscription:', subscriptionError);
+        throw subscriptionError;
+      }
 
+      console.log('Trial subscription created successfully');
       toast({
         title: "Trial Started",
         description: "Your 7-day free trial has begun!",
       });
     } catch (err) {
-      console.error('Error creating trial subscription:', err);
+      console.error('Error in createTrialSubscription:', err);
       toast({
         title: "Error",
         description: "Failed to start your trial. Please contact support.",
@@ -72,6 +84,7 @@ const Auth = () => {
           const { data: { session }, error } = await supabase.auth.getSession();
           if (error) throw error;
           if (session && mounted) {
+            console.log('OAuth callback successful, creating trial subscription...');
             await createTrialSubscription(session.user.id);
             console.log('Session set successfully, navigating to home');
             navigate("/", { replace: true });
@@ -104,8 +117,9 @@ const Auth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session);
       if (event === "SIGNED_IN" && session && mounted) {
+        console.log('User signed in, creating trial subscription...');
         await createTrialSubscription(session.user.id);
-        console.log('User signed in, navigating to home');
+        console.log('Trial subscription created, navigating to home');
         navigate("/", { replace: true });
       }
       if (event === "SIGNED_OUT") {
