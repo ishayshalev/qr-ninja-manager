@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSubscription } from "@/hooks/use-subscription";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 export function TrialStatusCard() {
   const { data: subscription, isLoading, error } = useSubscription();
+  const navigate = useNavigate();
 
   console.log("Trial Status Card Render:", {
     subscription,
@@ -49,27 +51,8 @@ export function TrialStatusCard() {
     return null;
   }
 
-  const handleUpgrade = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      // Using the yearly plan's Lemon Squeezy ID (you may want to fetch this from subscription_plans table)
-      const yearlyPlanId = "price_01hpk7n6p8qk3f5x4j1rg3z8my";
-      const successUrl = `${window.location.origin}/`;
-      const checkoutUrl = `https://lovable.lemonsqueezy.com/checkout/buy/${yearlyPlanId}?checkout[custom][user_id]=${session.user.id}&checkout[email]=${session.user.email}&checkout[success_url]=${encodeURIComponent(successUrl)}`;
-      
-      console.log('Opening Lemon Squeezy checkout URL:', checkoutUrl);
-      
-      if (window.createLemonSqueezy) {
-        const lemonSqueezy = window.createLemonSqueezy();
-        lemonSqueezy.Url.Open(checkoutUrl);
-      } else {
-        window.open(checkoutUrl, '_blank');
-      }
-    } catch (error) {
-      console.error('Error opening checkout:', error);
-    }
+  const handleUpgrade = () => {
+    navigate('/upgrade');
   };
 
   return (
