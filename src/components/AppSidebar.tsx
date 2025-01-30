@@ -7,9 +7,9 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader />
-      <SidebarContent className="flex flex-col justify-between">
+      <SidebarContent className="flex h-full flex-col justify-between">
         <SidebarNavigation />
-        <div className="px-2">
+        <div className="px-2 mb-2">
           <TrialStatusCard />
         </div>
       </SidebarContent>
