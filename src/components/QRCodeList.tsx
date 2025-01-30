@@ -1,7 +1,7 @@
 import { QRCode } from "@/types/qr";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +23,28 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [isCreateQROpen, setIsCreateQROpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+
+  const { data: subscription } = useQuery({
+    queryKey: ["subscription"],
+    queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.user.id) throw new Error("No user found");
+
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .select("status, trial_ends_at, current_period_ends_at")
+        .eq("user_id", session.session.user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const hasActiveSubscription = subscription && (
+    (subscription.status === "trialing" && new Date(subscription.trial_ends_at) > new Date()) ||
+    (subscription.status === "active" && new Date(subscription.current_period_ends_at) > new Date())
+  );
 
   const updateProjectMutation = useMutation({
     mutationFn: async ({ qrId, projectId }: { qrId: string; projectId: string | null }) => {
@@ -103,24 +125,12 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
 
   const createQRMutation = useMutation({
     mutationFn: async ({ name, redirectUrl, folderId }: { name: string; redirectUrl: string; folderId: string | null }) => {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session?.user.id) throw new Error("No user found");
-
-      // Check subscription status
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('status, trial_ends_at, current_period_ends_at')
-        .eq('user_id', session.session.user.id)
-        .maybeSingle();
-
-      const hasActiveSubscription = subscription && (
-        (subscription.status === 'trialing' && new Date(subscription.trial_ends_at) > new Date()) ||
-        (subscription.status === 'active' && new Date(subscription.current_period_ends_at) > new Date())
-      );
-
       if (!hasActiveSubscription) {
         throw new Error("Subscription required");
       }
+
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.user.id) throw new Error("No user found");
 
       const { data, error } = await supabase
         .from("qr_codes")

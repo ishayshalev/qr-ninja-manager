@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { SubscriptionStatus } from "./SubscriptionStatus";
 
 export const Header = () => {
   const navigate = useNavigate();
@@ -22,7 +23,10 @@ export const Header = () => {
   return (
     <div className="border-b">
       <div className="container mx-auto flex justify-between items-center py-4">
-        <h1 className="text-2xl font-bold">QR Code Manager</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold">QR Code Manager</h1>
+          <SubscriptionStatus />
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
@@ -34,9 +38,9 @@ export const Header = () => {
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/upgrade")}>
               <CreditCard className="mr-2 h-4 w-4" />
-              Billing
+              Subscription
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
