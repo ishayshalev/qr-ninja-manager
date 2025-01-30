@@ -16,21 +16,21 @@ const Auth = () => {
 
   const createTrialSubscription = async (userId: string) => {
     try {
-      console.log('Checking for existing subscription for user:', userId);
+      console.log('Checking for ANY existing subscriptions for user:', userId);
       
-      const { data: existingSubscription, error: fetchError } = await supabase
+      // Check for ANY subscription, not just active ones
+      const { data: existingSubscriptions, error: fetchError } = await supabase
         .from('subscriptions')
         .select('*')
-        .eq('user_id', userId)
-        .single();
+        .eq('user_id', userId);
 
       if (fetchError) {
-        console.error('Error checking existing subscription:', fetchError);
+        console.error('Error checking existing subscriptions:', fetchError);
         throw fetchError;
       }
 
-      if (existingSubscription) {
-        console.log('User already has a subscription:', existingSubscription);
+      if (existingSubscriptions && existingSubscriptions.length > 0) {
+        console.log('User already has subscriptions:', existingSubscriptions);
         return;
       }
 
