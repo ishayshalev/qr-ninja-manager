@@ -6,6 +6,17 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
+declare global {
+  interface Window {
+    createLemonSqueezy: () => {
+      Setup: ({ eventHandler }: { eventHandler: (event: any) => void }) => void;
+      Url: {
+        Open: (url: string) => void;
+      };
+    };
+  }
+}
+
 const Upgrade = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -38,6 +49,30 @@ const Upgrade = () => {
 
       setPlans(availablePlans || []);
       setLoading(false);
+
+      // Initialize Lemon Squeezy
+      const script = document.createElement('script');
+      script.src = 'https://app.lemonsqueezy.com/js/lemon.js';
+      script.async = true;
+      document.body.appendChild(script);
+
+      script.onload = () => {
+        const lemonSqueezy = window.createLemonSqueezy();
+        lemonSqueezy.Setup({
+          eventHandler: async (event) => {
+            if (event.event === 'checkout:opened') {
+              console.log('Checkout opened');
+            }
+            if (event.event === 'checkout:closed') {
+              console.log('Checkout closed');
+            }
+          },
+        });
+      };
+
+      return () => {
+        document.body.removeChild(script);
+      };
     };
 
     checkSession();
@@ -45,13 +80,20 @@ const Upgrade = () => {
 
   const handleUpgrade = async (planId: string, lemonSqueezyId: string) => {
     try {
-      // Here we'll integrate with Lemon Squeezy's checkout
-      // This is a placeholder - we'll implement the actual checkout in the next step
-      console.log('Upgrading to plan:', planId);
-      toast({
-        title: "Coming soon",
-        description: "Lemon Squeezy integration will be implemented in the next step.",
-      });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+
+      const checkoutUrl = `https://lovable.lemonsqueezy.com/checkout/buy/${lemonSqueezyId}?checkout[custom][user_id]=${session.user.id}&checkout[email]=${session.user.email}`;
+      
+      if (window.createLemonSqueezy) {
+        const lemonSqueezy = window.createLemonSqueezy();
+        lemonSqueezy.Url.Open(checkoutUrl);
+      } else {
+        window.open(checkoutUrl, '_blank');
+      }
     } catch (error) {
       console.error('Error upgrading:', error);
       toast({
