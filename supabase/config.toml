@@ -1,4 +1,5 @@
 project_id = "ryxmobnjjmvwchqcjmup"
+
 [api]
 port = 54321
 schemas = ["public", "storage", "graphql_public"]
@@ -13,6 +14,5 @@ major_version = 15
 [studio]
 port = 54323
 
-[functions]
 [functions.lemon-squeezy-webhook]
 verify_jwt = false
