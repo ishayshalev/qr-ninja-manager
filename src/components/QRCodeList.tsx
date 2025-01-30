@@ -4,7 +4,6 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { CreateQRDialog } from "./CreateQRDialog";
 import { TabsHeader } from "./qr/TabsHeader";
 import { ActionBar } from "./qr/ActionBar";
@@ -18,7 +17,6 @@ interface QRCodeListProps {
 
 export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [isCreateQROpen, setIsCreateQROpen] = useState(false);
@@ -126,7 +124,7 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
   const createQRMutation = useMutation({
     mutationFn: async ({ name, redirectUrl, folderId }: { name: string; redirectUrl: string; folderId: string | null }) => {
       if (!hasActiveSubscription) {
-        throw new Error("Subscription required");
+        throw new Error("Trial has ended");
       }
 
       const { data: session } = await supabase.auth.getSession();
@@ -157,13 +155,12 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
     },
     onError: (error) => {
       console.error("Create QR code mutation error:", error);
-      if (error instanceof Error && error.message === "Subscription required") {
+      if (error instanceof Error && error.message === "Trial has ended") {
         toast({
-          title: "Subscription Required",
-          description: "Please upgrade your plan to create more QR codes.",
+          title: "Trial Ended",
+          description: "Your trial has ended. Please upgrade your plan to create more QR codes.",
           variant: "destructive",
         });
-        navigate("/upgrade");
       } else {
         toast({
           title: "Error",
@@ -208,6 +205,7 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
               projects={projects}
               setIsCreateQROpen={setIsCreateQROpen}
               currentTabValue={tabValue}
+              hasActiveSubscription={hasActiveSubscription}
             />
             <QRCodeGrid
               qrCodes={qrCodes}

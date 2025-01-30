@@ -13,6 +13,7 @@ interface ActionBarProps {
   projects: Array<{ id: string; name: string }>;
   setIsCreateQROpen: (open: boolean) => void;
   currentTabValue: string;
+  hasActiveSubscription: boolean;
 }
 
 export const ActionBar = ({
@@ -20,6 +21,7 @@ export const ActionBar = ({
   projects,
   setIsCreateQROpen,
   currentTabValue,
+  hasActiveSubscription,
 }: ActionBarProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteQRCodes, setDeleteQRCodes] = useState(false);
@@ -134,7 +136,11 @@ export const ActionBar = ({
           projects={projects}
           currentProjectId={currentTabValue === "all" ? null : currentTabValue === "no-folder" ? null : currentTabValue}
         />
-        <Button variant="default" onClick={() => setIsCreateQROpen(true)}>
+        <Button 
+          variant="default" 
+          onClick={() => setIsCreateQROpen(true)}
+          disabled={!hasActiveSubscription}
+        >
           Create QR Code
         </Button>
       </div>
