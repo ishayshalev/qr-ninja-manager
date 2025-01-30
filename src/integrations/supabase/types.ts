@@ -157,6 +157,77 @@ export type Database = {
           },
         ]
       }
+      subscription_plans: {
+        Row: {
+          created_at: string | null
+          id: string
+          interval: string
+          lemon_squeezy_id: string
+          name: string
+          price_usd: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          interval: string
+          lemon_squeezy_id: string
+          name: string
+          price_usd: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          interval?: string
+          lemon_squeezy_id?: string
+          name?: string
+          price_usd?: number
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string | null
+          current_period_ends_at: string | null
+          id: string
+          lemon_squeezy_subscription_id: string | null
+          plan_id: string | null
+          status: string
+          trial_ends_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_period_ends_at?: string | null
+          id?: string
+          lemon_squeezy_subscription_id?: string | null
+          plan_id?: string | null
+          status: string
+          trial_ends_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_period_ends_at?: string | null
+          id?: string
+          lemon_squeezy_subscription_id?: string | null
+          plan_id?: string | null
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -175,6 +246,12 @@ export type Database = {
           end_date: string
         }
         Returns: number
+      }
+      has_active_subscription: {
+        Args: {
+          user_uuid: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

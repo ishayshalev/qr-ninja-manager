@@ -5,13 +5,56 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
   
-  // Update redirect URL based on environment
   const redirectUrl = `${window.location.origin}${window.location.pathname}`;
+
+  const createTrialSubscription = async (userId: string) => {
+    try {
+      const { data: existingSubscription } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (existingSubscription) {
+        console.log('User already has a subscription:', existingSubscription);
+        return;
+      }
+
+      const trialEndDate = new Date();
+      trialEndDate.setDate(trialEndDate.getDate() + 7); // 7-day trial
+
+      const { error: subscriptionError } = await supabase
+        .from('subscriptions')
+        .insert([
+          {
+            user_id: userId,
+            status: 'trialing',
+            trial_ends_at: trialEndDate.toISOString(),
+          }
+        ]);
+
+      if (subscriptionError) throw subscriptionError;
+
+      toast({
+        title: "Trial Started",
+        description: "Your 7-day free trial has begun!",
+      });
+    } catch (err) {
+      console.error('Error creating trial subscription:', err);
+      toast({
+        title: "Error",
+        description: "Failed to start your trial. Please contact support.",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     console.log('Auth component mounted, checking session...');
@@ -21,7 +64,6 @@ const Auth = () => {
     
     let mounted = true;
     
-    // Handle the OAuth callback
     const handleOAuthCallback = async () => {
       const hash = window.location.hash;
       if (hash && hash.includes('access_token')) {
@@ -30,6 +72,7 @@ const Auth = () => {
           const { data: { session }, error } = await supabase.auth.getSession();
           if (error) throw error;
           if (session && mounted) {
+            await createTrialSubscription(session.user.id);
             console.log('Session set successfully, navigating to home');
             navigate("/", { replace: true });
           }
@@ -40,7 +83,6 @@ const Auth = () => {
       }
     };
 
-    // Check if user is already logged in
     const checkSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -59,10 +101,10 @@ const Auth = () => {
     handleOAuthCallback();
     checkSession();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session);
       if (event === "SIGNED_IN" && session && mounted) {
+        await createTrialSubscription(session.user.id);
         console.log('User signed in, navigating to home');
         navigate("/", { replace: true });
       }
@@ -90,6 +132,9 @@ const Auth = () => {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+          <div className="mb-4 text-center text-sm text-gray-600">
+            Start with a 7-day free trial. No credit card required.
+          </div>
           <SupabaseAuth 
             supabaseClient={supabase} 
             appearance={{ 
