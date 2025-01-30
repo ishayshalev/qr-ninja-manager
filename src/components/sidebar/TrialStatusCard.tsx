@@ -54,17 +54,28 @@ export function TrialStatusCard() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
+      // Using the store ID format from Lemon Squeezy docs
+      const storeId = "shalev-agency";
       const productId = "439912";
       const successUrl = `${window.location.origin}/`;
-      const checkoutUrl = `https://shalev-agency.lemonsqueezy.com/checkout/buy/${productId}?checkout[custom][user_id]=${session.user.id}&checkout[email]=${session.user.email}&checkout[success_url]=${encodeURIComponent(successUrl)}`;
       
-      console.log('Opening Lemon Squeezy checkout URL:', checkoutUrl);
+      // Constructing URL according to Lemon Squeezy documentation
+      const checkoutUrl = `https://${storeId}.lemonsqueezy.com/checkout/buy/${productId}`;
+      const params = new URLSearchParams({
+        'checkout[custom][user_id]': session.user.id,
+        'checkout[email]': session.user.email,
+        'checkout[success_url]': successUrl
+      });
+      
+      const finalUrl = `${checkoutUrl}?${params.toString()}`;
+      
+      console.log('Opening Lemon Squeezy checkout URL:', finalUrl);
       
       if (window.createLemonSqueezy) {
         const lemonSqueezy = window.createLemonSqueezy();
-        lemonSqueezy.Url.Open(checkoutUrl);
+        lemonSqueezy.Url.Open(finalUrl);
       } else {
-        window.open(checkoutUrl, '_blank');
+        window.open(finalUrl, '_blank');
       }
     } catch (error) {
       console.error('Error opening checkout:', error);
