@@ -54,10 +54,9 @@ export function TrialStatusCard() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // Using the yearly plan's Lemon Squeezy ID
-      const yearlyPlanId = "price_01hpk7n6p8qk3f5x4j1rg3z8my";
+      const productId = "439912";
       const successUrl = `${window.location.origin}/`;
-      const checkoutUrl = `https://lovable.lemonsqueezy.com/checkout/buy/${yearlyPlanId}?checkout[custom][user_id]=${session.user.id}&checkout[email]=${session.user.email}&checkout[success_url]=${encodeURIComponent(successUrl)}`;
+      const checkoutUrl = `https://lovable.lemonsqueezy.com/checkout/buy/${productId}?checkout[custom][user_id]=${session.user.id}&checkout[email]=${session.user.email}&checkout[success_url]=${encodeURIComponent(successUrl)}`;
       
       console.log('Opening Lemon Squeezy checkout URL:', checkoutUrl);
       
