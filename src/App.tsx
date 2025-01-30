@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
+import Upgrade from "./pages/Upgrade";
 import { Toaster } from "@/components/ui/toaster";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import "./App.css";
@@ -25,6 +26,7 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/upgrade" element={<Upgrade />} />
             <Route path="*" element={<Navigate to="/auth" replace />} />
           </Routes>
           <Toaster />

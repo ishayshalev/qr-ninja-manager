@@ -4,6 +4,7 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { CreateQRDialog } from "./CreateQRDialog";
 import { TabsHeader } from "./qr/TabsHeader";
 import { ActionBar } from "./qr/ActionBar";
@@ -17,6 +18,7 @@ interface QRCodeListProps {
 
 export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [isCreateQROpen, setIsCreateQROpen] = useState(false);
@@ -104,6 +106,22 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user.id) throw new Error("No user found");
 
+      // Check subscription status
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('status, trial_ends_at, current_period_ends_at')
+        .eq('user_id', session.session.user.id)
+        .maybeSingle();
+
+      const hasActiveSubscription = subscription && (
+        (subscription.status === 'trialing' && new Date(subscription.trial_ends_at) > new Date()) ||
+        (subscription.status === 'active' && new Date(subscription.current_period_ends_at) > new Date())
+      );
+
+      if (!hasActiveSubscription) {
+        throw new Error("Subscription required");
+      }
+
       const { data, error } = await supabase
         .from("qr_codes")
         .insert([
@@ -129,11 +147,20 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
     },
     onError: (error) => {
       console.error("Create QR code mutation error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create QR code.",
-        variant: "destructive",
-      });
+      if (error instanceof Error && error.message === "Subscription required") {
+        toast({
+          title: "Subscription Required",
+          description: "Please upgrade your plan to create more QR codes.",
+          variant: "destructive",
+        });
+        navigate("/upgrade");
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create QR code.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
