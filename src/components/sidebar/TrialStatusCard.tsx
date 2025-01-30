@@ -8,19 +8,29 @@ import { useSubscription } from "@/hooks/use-subscription";
 export function TrialStatusCard() {
   const { data: subscription, isLoading, error } = useSubscription();
 
-  console.log("Trial Status:", {
+  console.log("Trial Status Card Render:", {
     subscription,
     isLoading,
     error,
-    isTrialing: subscription?.isTrialing,
-    trialEndsAt: subscription?.trial_ends_at
+    status: subscription?.status,
+    trialEndsAt: subscription?.trial_ends_at,
+    isTrialing: subscription?.status === 'trialing'
   });
 
-  if (isLoading || error || !subscription?.isTrialing || !subscription.trial_ends_at) {
+  if (isLoading) {
+    console.log("Loading subscription data...");
+    return null;
+  }
+
+  if (error) {
+    console.error("Error loading subscription:", error);
+    return null;
+  }
+
+  if (!subscription || subscription.status !== 'trialing' || !subscription.trial_ends_at) {
     console.log("Not showing trial card because:", {
-      isLoading,
-      error,
-      isTrialing: subscription?.isTrialing,
+      hasSubscription: !!subscription,
+      status: subscription?.status,
       trialEndsAt: subscription?.trial_ends_at
     });
     return null;
@@ -31,8 +41,10 @@ export function TrialStatusCard() {
     new Date()
   );
 
+  console.log("Days left in trial:", daysLeft);
+
   if (daysLeft <= 0) {
-    console.log("Trial has ended, days left:", daysLeft);
+    console.log("Trial has ended");
     return null;
   }
 
