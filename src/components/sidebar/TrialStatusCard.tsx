@@ -57,8 +57,8 @@ export function TrialStatusCard() {
         return;
       }
 
-      // Using the verified product ID from your store
-      const checkoutUrl = `https://shalev-agency.lemonsqueezy.com/checkout/buy/439912`;
+      // Using the correct product URL from Lemon Squeezy
+      const checkoutUrl = 'https://shalev-agency.lemonsqueezy.com/buy/d7744f20-4281-4b47-96dc-97beccde36ad';
       
       // Add query parameters
       const params = {
