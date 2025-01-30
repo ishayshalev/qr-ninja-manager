@@ -52,20 +52,30 @@ export function TrialStatusCard() {
   const handleUpgrade = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session?.user) {
+        console.log("No session found");
+        return;
+      }
 
-      const productId = "439912";
-      const successUrl = encodeURIComponent(`${window.location.origin}/`);
-      const email = encodeURIComponent(session.user.email || '');
-      const userId = encodeURIComponent(session.user.id);
+      // Using the verified product ID from your store
+      const checkoutUrl = `https://shalev-agency.lemonsqueezy.com/checkout/buy/439912`;
       
-      // Direct URL construction without relying on JavaScript SDK
-      const checkoutUrl = `https://shalev-agency.lemonsqueezy.com/checkout/buy/${productId}?checkout[custom][user_id]=${userId}&checkout[email]=${email}&checkout[success_url]=${successUrl}`;
+      // Add query parameters
+      const params = {
+        'checkout[custom][user_id]': session.user.id,
+        'checkout[email]': session.user.email || '',
+        'checkout[success_url]': window.location.origin
+      };
+
+      // Construct final URL with properly encoded parameters
+      const finalUrl = Object.entries(params).reduce((url, [key, value]) => {
+        return `${url}${url.includes('?') ? '&' : '?'}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+      }, checkoutUrl);
+
+      console.log('Opening checkout with URL:', finalUrl);
       
-      console.log('Opening Lemon Squeezy checkout URL:', checkoutUrl);
-      
-      // Open in new tab directly
-      window.open(checkoutUrl, '_blank');
+      // Open in new tab
+      window.open(finalUrl, '_blank');
     } catch (error) {
       console.error('Error opening checkout:', error);
     }
