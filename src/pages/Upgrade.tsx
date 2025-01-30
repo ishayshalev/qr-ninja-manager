@@ -86,7 +86,10 @@ const Upgrade = () => {
         return;
       }
 
-      const checkoutUrl = `https://lovable.lemonsqueezy.com/checkout/buy/${lemonSqueezyId}?checkout[custom][user_id]=${session.user.id}&checkout[email]=${session.user.email}`;
+      const successUrl = `${window.location.origin}/`;
+      const checkoutUrl = `https://lovable.lemonsqueezy.com/checkout/buy/${lemonSqueezyId}?checkout[custom][user_id]=${session.user.id}&checkout[email]=${session.user.email}&checkout[success_url]=${encodeURIComponent(successUrl)}`;
+      
+      console.log('Opening checkout URL:', checkoutUrl);
       
       if (window.createLemonSqueezy) {
         const lemonSqueezy = window.createLemonSqueezy();
