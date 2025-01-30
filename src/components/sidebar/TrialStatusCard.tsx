@@ -6,9 +6,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useSubscription } from "@/hooks/use-subscription";
 
 export function TrialStatusCard() {
-  const { data: subscription } = useSubscription();
+  const { data: subscription, isLoading, error } = useSubscription();
 
-  if (!subscription?.isTrialing || !subscription.trial_ends_at) {
+  console.log("Trial Status:", {
+    subscription,
+    isLoading,
+    error,
+    isTrialing: subscription?.isTrialing,
+    trialEndsAt: subscription?.trial_ends_at
+  });
+
+  if (isLoading || error || !subscription?.isTrialing || !subscription.trial_ends_at) {
+    console.log("Not showing trial card because:", {
+      isLoading,
+      error,
+      isTrialing: subscription?.isTrialing,
+      trialEndsAt: subscription?.trial_ends_at
+    });
     return null;
   }
 
@@ -17,7 +31,10 @@ export function TrialStatusCard() {
     new Date()
   );
 
-  if (daysLeft <= 0) return null;
+  if (daysLeft <= 0) {
+    console.log("Trial has ended, days left:", daysLeft);
+    return null;
+  }
 
   return (
     <Card className="bg-[#F1F0FB] border-none shadow-none">
