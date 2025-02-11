@@ -32,6 +32,36 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
 
   console.log("Has active subscription:", hasActiveSubscription); // Debug log
 
+  const updateProjectMutation = useMutation({
+    mutationFn: async ({ qrId, projectId }: { qrId: string; projectId: string | null }) => {
+      const { error } = await supabase
+        .from("qr_codes")
+        .update({ project_id: projectId })
+        .eq("id", qrId);
+      
+      if (error) {
+        console.error("Update project error:", error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["qrCodes"] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast({
+        title: "Success",
+        description: "QR code folder updated successfully.",
+      });
+    },
+    onError: (error) => {
+      console.error("Update project mutation error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update QR code folder.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const createFolderMutation = useMutation({
     mutationFn: async () => {
       const { data: session } = await supabase.auth.getSession();
