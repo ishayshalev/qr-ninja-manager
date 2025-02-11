@@ -1,7 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useSubscription() {
+  const queryClient = useQueryClient();
+
   return useQuery({
     queryKey: ["subscription"],
     queryFn: async () => {
@@ -41,9 +44,11 @@ export function useSubscription() {
         ...subscription,
         isActive: 
           (subscription.status === 'trialing' && trialEnd && trialEnd > now) ||
-          (subscription.status === 'active' && subscriptionEnd && subscriptionEnd > now),
+          (subscription.status === 'active'),
         isTrialing: subscription.status === 'trialing' && trialEnd && trialEnd > now,
       };
     },
+    refetchInterval: 30000, // Refetch every 30 seconds to ensure up-to-date data
+    staleTime: 15000, // Consider data stale after 15 seconds
   });
 }
