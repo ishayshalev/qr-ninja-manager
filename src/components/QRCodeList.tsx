@@ -1,3 +1,4 @@
+
 import { QRCode } from "@/types/qr";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -8,6 +9,7 @@ import { CreateQRDialog } from "./CreateQRDialog";
 import { TabsHeader } from "./qr/TabsHeader";
 import { ActionBar } from "./qr/ActionBar";
 import { QRCodeGrid } from "./qr/QRCodeGrid";
+import { useSubscription } from "@/hooks/use-subscription";
 
 interface QRCodeListProps {
   qrCodes: QRCode[];
@@ -22,57 +24,13 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
   const [isCreateQROpen, setIsCreateQROpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
 
-  const { data: subscription } = useQuery({
-    queryKey: ["subscription"],
-    queryFn: async () => {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session?.user.id) throw new Error("No user found");
+  const { data: subscription, isLoading: isLoadingSubscription } = useSubscription();
 
-      const { data, error } = await supabase
-        .from("subscriptions")
-        .select("status, trial_ends_at, current_period_ends_at")
-        .eq("user_id", session.session.user.id)
-        .maybeSingle();
+  console.log("Subscription data:", subscription); // Debug log
 
-      if (error) throw error;
-      return data;
-    },
-  });
+  const hasActiveSubscription = subscription?.isActive;
 
-  const hasActiveSubscription = subscription && (
-    (subscription.status === "trialing" && new Date(subscription.trial_ends_at) > new Date()) ||
-    (subscription.status === "active" && new Date(subscription.current_period_ends_at) > new Date())
-  );
-
-  const updateProjectMutation = useMutation({
-    mutationFn: async ({ qrId, projectId }: { qrId: string; projectId: string | null }) => {
-      const { error } = await supabase
-        .from("qr_codes")
-        .update({ project_id: projectId })
-        .eq("id", qrId);
-      
-      if (error) {
-        console.error("Update project error:", error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["qrCodes"] });
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      toast({
-        title: "Success",
-        description: "QR code folder updated successfully.",
-      });
-    },
-    onError: (error) => {
-      console.error("Update project mutation error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update QR code folder.",
-        variant: "destructive",
-      });
-    },
-  });
+  console.log("Has active subscription:", hasActiveSubscription); // Debug log
 
   const createFolderMutation = useMutation({
     mutationFn: async () => {
@@ -124,7 +82,7 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
   const createQRMutation = useMutation({
     mutationFn: async ({ name, redirectUrl, folderId }: { name: string; redirectUrl: string; folderId: string | null }) => {
       if (!hasActiveSubscription) {
-        throw new Error("Trial has ended");
+        throw new Error("No active subscription");
       }
 
       const { data: session } = await supabase.auth.getSession();
@@ -155,10 +113,10 @@ export const QRCodeList = ({ qrCodes, setQRCodes, projects }: QRCodeListProps) =
     },
     onError: (error) => {
       console.error("Create QR code mutation error:", error);
-      if (error instanceof Error && error.message === "Trial has ended") {
+      if (error instanceof Error && error.message === "No active subscription") {
         toast({
-          title: "Trial Ended",
-          description: "Your trial has ended. Please upgrade your plan to create more QR codes.",
+          title: "Subscription Required",
+          description: "You need an active subscription to create QR codes.",
           variant: "destructive",
         });
       } else {
